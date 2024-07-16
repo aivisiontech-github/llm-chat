@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const axios = require('axios');
 const dotenv = require('dotenv');
 const admin = require('firebase-admin');
+const cors = require('cors');
 
 const promptGenerator = require("./prompter");
 
@@ -25,7 +26,7 @@ admin.initializeApp({
 const db = admin.database();
 
 app.use(bodyParser.json());
-
+app.use(cors()); 
 function apiKeyMiddleware(req, res, next) {
   const apiKey = req.params.apiAnahtari;
   if (apiKey !== API_KEY) {
@@ -35,7 +36,7 @@ function apiKeyMiddleware(req, res, next) {
 }
 
 app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
-  const { language, data } = req.body;
+  const { language, data, sport } = req.body;
 
   if (!language || !data) {
     return res.status(400).json({ message: 'Geçersiz istek. Dil ve veri gereklidir.' });
@@ -56,16 +57,16 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
     }
 
     const messages = [
-      { role: "system", content: `With 20 years of experience and having worked as a physiotherapist in various parts of the world, you are an expert in analyzing medical data to determine which training exercises are not recommended for basketball players. You are an AI designed to obtain, read, and consider the given information about a basketball player, then evaluate and express which training exercises might be harmful based on previous and current training routines in basketball. Considering both on-field training activities such as shooting drills, running drills, and other common basketball exercises, you provide comprehensive advice on what might be detrimental to the player’s health and performance.` },
-      { role: "user", content: `Using the data provided to you, create an analysis in ${language} and specifically identify which training exercises are risky. Include percentage levels and explain the reasons in short sentences. Data: ${prompt}` }
+      { role: "system", content: `With 20 years of experience and having worked as a physiotherapist in various parts of the world, you are an expert in analyzing medical data to determine which training exercises are not recommended for ${sport} players. You are an AI designed to obtain, read, and consider the given information about a ${sport} player, then evaluate and express which training exercises might be harmful based on previous and current training routines in ${sport}. Considering both on-field training activities such as shooting drills, running drills, and other common ${sport} exercises, you provide comprehensive advice on what might be detrimental to the player’s health and performance.` },
+      { role: "user", content: `Using the data provided to you, create an analysis in ${language} and specifically identify which training exercises are risky. Explain the reasons in short sentences. When providing risk levels, keep in mind that the rating system is as follows: DisabilityType / Injury Levels are: { Normal, ShouldObserve, ShouldProtect, Attention, Urgent }  TirednessType / Fatigue Levels are: { Normal, Tired, Exhausted, Urgent } Data: ${prompt}` }
     ];
 
     const response = await axios.post(
       'https://api.openai.com/v1/chat/completions',
       {
-        model: 'gpt-3.5-turbo-16k',
+        model: 'gpt-3.5-turbo',
         messages: messages,
-        temperature: 0.8,
+        temperature: 0.5,
         max_tokens: 2000,
       },
       {
