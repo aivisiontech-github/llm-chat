@@ -62,7 +62,7 @@ module.exports = function promptGenerator(data){
         }).join('; ');
     };
 
-    const prompt = `The athlete, who plays as a ${positionName}, was born on ${formatDate(birthDate)} and is ${gender}. The athlete's dominant side is ${dominantSide}. With a height of ${height} cm and a weight of ${weight} kg, the athlete underwent a ${analyzeType} focusing on the ${analyzeSideType} side.Upon analyzing the thermal data, the following anomalies were detected: ${generateAnomalyReport(anamolies)}.`;
+    const prompt = `The athlete, who plays as a ${positionName}, was born on ${formatDate(birthDate)} and is ${gender}. The athlete's dominant side is ${dominantSide}. With a height of ${height} cm and a weight of ${weight} kg, the athlete underwent a ${analyzeType} focusing on the ${analyzeSideType} side.Upon analyzing the thermal data, A patient is diagnosed with cervical disc herniation at C5 and C6 and impingement syndrome.,the following anomalies were detected: ${generateAnomalyReport(anamolies)}. `;
 
     return {prompt, id};
 }

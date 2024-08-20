@@ -27,6 +27,7 @@ const db = admin.database();
 
 app.use(bodyParser.json());
 app.use(cors()); 
+
 function apiKeyMiddleware(req, res, next) {
   const apiKey = req.params.apiAnahtari;
   if (apiKey !== API_KEY) {
@@ -36,65 +37,66 @@ function apiKeyMiddleware(req, res, next) {
 }
 
 app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
-  const { language, data, sport } = req.body;
+    const { language, data, sport } = req.body;
 
-  if (!language || !data) {
-    return res.status(400).json({ message: 'Geçersiz istek. Dil ve veri gereklidir.' });
-  }
-
-  const { prompt, id } = promptGenerator(data.value);
-
-  const ref = db.ref("analyses");
-  const analysisRef = ref.child(id);
-
-  try {
-    // Veritabanında belirli bir ID ile analiz olup olmadığını kontrol etme
-    const snapshot = await analysisRef.once('value');
-    if (snapshot.exists()) {
-      // Eğer analiz zaten varsa, bu analizi döndür
-      const existingAnalysis = snapshot.val().analysis;
-      return res.json({ analysis: existingAnalysis });
+    if (!language || !data) {
+        return res.status(400).json({ message: 'Geçersiz istek. Dil ve veri gereklidir.' });
     }
 
-    const messages = [
-      { role: "system", content: `With 20 years of experience and having worked as a physiotherapist in various parts of the world, you are an expert in analyzing medical data to determine which training exercises are not recommended for ${sport} players. You are an AI designed to obtain, read, and consider the given information about a ${sport} player, then evaluate and express which training exercises might be harmful based on previous and current training routines in ${sport}. Considering both on-field training activities such as shooting drills, running drills, and other common ${sport} exercises, you provide comprehensive advice on what might be detrimental to the player’s health and performance.` },
-      { role: "user", content: `Using the data provided to you, create an analysis in ${language} and specifically identify which training exercises are risky. Explain the reasons in short sentences. When providing risk levels, keep in mind that the rating system is as follows: DisabilityType / Injury Levels are: { Normal, ShouldObserve, ShouldProtect, Attention, Urgent }  TirednessType / Fatigue Levels are: { Normal, Tired, Exhausted, Urgent } Data: ${prompt}` }
-    ];
+    const { prompt, id } = promptGenerator(data.value);
 
-    const response = await axios.post(
-      'https://api.openai.com/v1/chat/completions',
-      {
-        model: 'gpt-4',
-        messages: messages,
-        temperature: 0.5,
-        max_tokens: 2000,
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${openAPIkey}`
+    const ref = db.ref("analyses");
+    const analysisRef = ref.child(id);
+
+    try {
+        // Veritabanında belirli bir ID ile analiz olup olmadığını kontrol etme
+        const snapshot = await analysisRef.once('value');
+        if (snapshot.exists()) {
+            // Eğer analiz zaten varsa, bu analizi döndür
+            const existingAnalysis = snapshot.val().analysis;
+            return res.json({ analysis: existingAnalysis });
         }
-      }
-    );
 
-    const result = response.data;
-    if (result.choices && result.choices[0].message && result.choices[0].message.content) {
-      const analysis = result.choices[0].message.content;
+        // Asistanla iletişim kuruyoruz ve GPT-4 modelini kullanıyoruz
+        const messages = [
+            { role: "system", content: `With 20 years of experience and having worked as a physiotherapist in various parts of the world, you are an expert in analyzing medical data to determine which training exercises are not recommended for ${sport} players. You are an AI designed to obtain, read, and consider the given information about a ${sport} player, then evaluate and express which training exercises might be harmful based on previous and current training routines in ${sport}. Considering both on-field training activities such as shooting drills, running drills, and other common ${sport} exercises, you provide comprehensive advice on what might be detrimental to the player’s health and performance.` },
+            { role: "user", content: `Using the data provided to you, create an analysis in ${language} and specifically identify which training exercises are risky. Explain the reasons in short sentences. When providing risk levels, keep in mind that the rating system is as follows: DisabilityType / Injury Levels are: { Normal, ShouldObserve, ShouldProtect, Attention, Urgent }  TirednessType / Fatigue Levels are: { Normal, Tired, Exhausted, Urgent } Data: ${prompt}` }
+        ];
 
-      // Yeni analizi veritabanına kaydetme
-      await analysisRef.set({
-        analysis: analysis,
-        timestamp: admin.database.ServerValue.TIMESTAMP
-      });
+        const response = await axios.post(
+            'https://api.openai.com/v1/chat/completions',
+            {
+                model: 'gpt-4',
+                messages: messages,
+                temperature: 0.5,
+                max_tokens: 2000,
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${openAPIkey}`
+                }
+            }
+        );
 
-      return res.json({ analysis });
-    } else {
-      return res.status(500).json({ message: 'API yanıtı beklenmeyen bir biçimde: ', result });
+        const result = response.data;
+        if (result.choices && result.choices[0].message && result.choices[0].message.content) {
+            const analysis = result.choices[0].message.content;
+
+            // Yeni analizi veritabanına kaydetme
+            await analysisRef.set({
+                analysis: analysis,
+                timestamp: admin.database.ServerValue.TIMESTAMP
+            });
+
+            return res.json({ analysis });
+        } else {
+            return res.status(500).json({ message: 'API yanıtı beklenmeyen bir biçimde: ', result });
+        }
+    } catch (error) {
+        console.error('Error:', error.response ? error.response.data : error.message);
+        return res.status(500).json({ message: 'API çağrısı sırasında bir hata oluştu.', error: error.response ? error.response.data : error.message });
     }
-  } catch (error) {
-    console.error('Error:', error.response ? error.response.data : error.message);
-    return res.status(500).json({ message: 'API çağrısı sırasında bir hata oluştu.', error: error.response ? error.response.data : error.message });
-  }
 });
 
 app.listen(PORT, () => {
