@@ -22,6 +22,6 @@
     "express": "^4.19.2",
     "firebase-admin": "^12.2.0",
     "mysql2": "^3.10.2",
-    "openai": "^4.56.0"
+    "openai": "^4.61.1"
   }
 }

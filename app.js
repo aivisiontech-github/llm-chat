@@ -5,6 +5,23 @@ const dotenv = require('dotenv');
 const admin = require('firebase-admin');
 const cors = require('cors');
 
+// OpenAI API anahtarınızı burada da dahil edin
+const openai = require('./utils/openai'); // openai.js dosyasından içe aktarın
+
+// Fonksiyonları içe aktar
+const {
+  getOrCreateAssistant,
+  createThread,
+  getAssistantResponse,
+} = require('./utils/assistant');
+
+const {
+  getOrCreateVectorStore,
+  addFilesToVectorStore,
+  addFilesFromFolderToVectorStore,
+  updateAssistantWithVectorStore,
+} = require('./utils/vectorstore');
+
 const promptGenerator = require("./prompter");
 
 dotenv.config();  // Bu satır en üstte olmalı, ardından process.env kullanabilirsiniz.
@@ -13,7 +30,6 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 const API_KEY = 'test';
-const openAPIkey = process.env.OPEN_API_KEY;
 
 // Firebase Admin SDK'yı başlatma
 const serviceAccount = require('./database.json');
@@ -22,6 +38,29 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
   databaseURL: "https://ai4sports-analysis-default-rtdb.firebaseio.com"
 });
+
+let assistant;
+let vectorStore;
+
+(async () => {
+  try {
+    // Asistanı al veya oluştur
+    assistant = await getOrCreateAssistant();
+
+    // Vektör deposunu al veya oluştur
+    vectorStore = await getOrCreateVectorStore();
+
+    // Asistanı vektör deposuyla güncelle
+    await updateAssistantWithVectorStore(assistant, vectorStore);
+
+    // Sunucuyu başlat
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Error initializing assistant or vector store:', error);
+  }
+})();
 
 const db = admin.database();
 
@@ -57,48 +96,29 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
             return res.json({ analysis: existingAnalysis });
         }
 
-        // Asistanla iletişim kuruyoruz ve GPT-4 modelini kullanıyoruz
-        const messages = [
-            { role: "system", content: `With 20 years of experience and having worked as a physiotherapist in various parts of the world, you are an expert in analyzing medical data to determine which training exercises are not recommended for ${sport} players. You are an AI designed to obtain, read, and consider the given information about a ${sport} player, then evaluate and express which training exercises might be harmful based on previous and current training routines in ${sport}. Considering both on-field training activities such as shooting drills, running drills, and other common ${sport} exercises, you provide comprehensive advice on what might be detrimental to the player’s health and performance.` },
-            { role: "user", content: `Using the data provided to you, create an analysis in ${language} and specifically identify which training exercises are risky. Explain the reasons in short sentences. When providing risk levels, keep in mind that the rating system is as follows: DisabilityType / Injury Levels are: { Normal, ShouldObserve, ShouldProtect, Attention, Urgent }  TirednessType / Fatigue Levels are: { Normal, Tired, Exhausted, Urgent } Data: ${prompt}` }
-        ];
+        // Kullanıcı mesajını oluştur
+        const userMessage = `Using the data provided to you, create an analysis in ${language} and specifically identify which training exercises are risky. Explain the reasons in short sentences. When providing risk levels, keep in mind that the rating system is as follows: DisabilityType / Injury Levels are: { Normal, ShouldObserve, ShouldProtect, Attention, Urgent } TirednessType / Fatigue Levels are: { Normal, Tired, Exhausted, Urgent } Data: ${prompt}`;
 
-        const response = await axios.post(
-            'https://api.openai.com/v1/chat/completions',
-            {
-                model: 'gpt-4',
-                messages: messages,
-                temperature: 0.5,
-                max_tokens: 2000,
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${openAPIkey}`
-                }
-            }
-        );
+        // İleti dizisi oluştur
+        const thread = await createThread(userMessage);
 
-        const result = response.data;
-        if (result.choices && result.choices[0].message && result.choices[0].message.content) {
-            const analysis = result.choices[0].message.content;
+        // Asistan yanıtını al
+        const analysis = await getAssistantResponse(thread, assistant);
 
-            // Yeni analizi veritabanına kaydetme
-            await analysisRef.set({
-                analysis: analysis,
-                timestamp: admin.database.ServerValue.TIMESTAMP
-            });
+        // Yeni analizi veritabanına kaydetme
+        await analysisRef.set({
+            analysis: analysis,
+            timestamp: admin.database.ServerValue.TIMESTAMP
+        });
 
-            return res.json({ analysis });
-        } else {
-            return res.status(500).json({ message: 'API yanıtı beklenmeyen bir biçimde: ', result });
-        }
+        return res.json({ analysis });
     } catch (error) {
-        console.error('Error:', error.response ? error.response.data : error.message);
-        return res.status(500).json({ message: 'API çağrısı sırasında bir hata oluştu.', error: error.response ? error.response.data : error.message });
+        console.error('Error:', error.message);
+        return res.status(500).json({ message: 'API çağrısı sırasında bir hata oluştu.', error: error.message });
     }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
+// Tekrar app.listen çağrısına gerek yok, yukarıda zaten var
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });
