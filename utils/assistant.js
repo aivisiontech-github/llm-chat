@@ -50,7 +50,7 @@ async function createThread(userMessage) {
 }
 
 // Asistan yanıtını alma
-async function getAssistantResponse(thread, assistant) {
+async function getAssistantResponsev0(thread, assistant) {
   return new Promise((resolve, reject) => {
     let assistantResponse = '';
     const stream = openai.beta.threads.runs
@@ -74,6 +74,37 @@ async function getAssistantResponse(thread, assistant) {
         reject(error);
       });
   });
+}
+
+async function getAssistantResponse(thread, assistant, res) {
+  try {
+    const run = await openai.beta.threads.runs.create(thread.id, {
+      assistant_id: assistant.id,
+      stream: true
+    });
+
+    for await (const event of run) {
+      if (event.event === "thread.message.delta") {
+        const content = event.data.delta.content;
+        if (content && content.length > 0 && content[0].type === "text") {
+          const textValue = content[0].text.value;
+          res.write(`data: ${JSON.stringify({ text: textValue })}\n\n`);
+        }
+      } else if (event.event === "thread.run.completed") {
+        res.write(`data: ${JSON.stringify({ status: 'completed' })}\n\n`);
+        res.write('data: [DONE]\n\n');
+      } else if (event.event === "thread.run.failed") {
+        res.write(`data: ${JSON.stringify({ status: 'failed', error: event.data.last_error })}\n\n`);
+        res.write('data: [DONE]\n\n');
+      }
+    }
+  } catch (error) {
+    console.error('Error in getAssistantResponse:', error);
+    res.write(`data: ${JSON.stringify({ status: 'error', message: error.message })}\n\n`);
+    res.write('data: [DONE]\n\n');
+  } finally {
+    res.end();
+  }
 }
 // Fonksiyonları dışa aktar
 module.exports = {
