@@ -11,8 +11,7 @@ const openai = require('./utils/openai'); // openai.js dosyasından içe aktarı
 // Fonksiyonları içe aktar
 const {
   getOrCreateAssistant,
-  createThread,
-  getAssistantResponse,
+  createThreadAndRunWithFileSearch,  // Yeni stream fonksiyonu eklendi
 } = require('./utils/assistant');
 
 const {
@@ -99,19 +98,16 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
         // Kullanıcı mesajını oluştur
         const userMessage = `Using the data provided to you, create an analysis in ${language} and specifically identify which training exercises are risky. Explain the reasons in short sentences. When providing risk levels, keep in mind that the rating system is as follows: DisabilityType / Injury Levels are: { Normal, ShouldObserve, ShouldProtect, Attention, Urgent } TirednessType / Fatigue Levels are: { Normal, Tired, Exhausted, Urgent } Data: ${prompt}`;
 
-        // İleti dizisi oluştur
-        const thread = await createThread(userMessage);
-
-        // Asistan yanıtını al
-        const analysis = await getAssistantResponse(thread, assistant);
+        // Yeni thread ve dosya arama işlemi başlat
+        const { threadId, runId, response } = await createThreadAndRunWithFileSearch(assistant.id, vectorStore.id, userMessage);
 
         // Yeni analizi veritabanına kaydetme
         await analysisRef.set({
-            analysis: analysis,
+            analysis: response,
             timestamp: admin.database.ServerValue.TIMESTAMP
         });
 
-        return res.json({ analysis });
+        return res.json({ analysis: response });
     } catch (error) {
         console.error('Error:', error.message);
         return res.status(500).json({ message: 'API çağrısı sırasında bir hata oluştu.', error: error.message });

@@ -8,7 +8,6 @@ require('dotenv').config();
 // OpenAI API anahtarınızı burada da dahil edin
 const openai = require('./openai'); // openai.js dosyasından içe aktarın
 
-
 // Mevcut asistan kimliği
 const ASSISTANT_ID = 'asst_Z368IKrzBf1H6onIjVIdz28j'; // Mevcut asistan kimliği
 
@@ -35,49 +34,60 @@ async function getOrCreateAssistant() {
   return assistant;
 }
 
-// İleti dizisi oluşturma
-async function createThread(userMessage) {
-  const thread = await openai.beta.threads.create({
-    messages: [
-      {
-        role: 'user',
-        content: userMessage,
+// Yeni Thread ve Run oluşturma (Stream ve File Search ile)
+async function createThreadAndRunWithFileSearch(assistantId, vectorStoreId, userMessage) {
+  try {
+    console.log("Creating a thread...");
+    const thread = await openai.beta.threads.create();
+    console.log("Thread created:", thread.id);
+
+    console.log("Adding a message to the thread...");
+    await openai.beta.threads.messages.create(thread.id, {
+      role: "user",
+      content: userMessage
+    });
+
+    console.log("Running the thread with file search...");
+    const run = await openai.beta.threads.runs.create(thread.id, {
+      assistant_id: assistantId,
+      tools: [{ type: "file_search" }],
+      tool_resources: {
+        file_search: {
+          vector_store_ids: [vectorStoreId]
+        }
       },
-    ],
-  });
-  console.log('İleti dizisi oluşturuldu:', thread.id);
-  return thread;
+      stream: true
+    });
+
+    console.log("Assistant's response:");
+    let fullResponse = "";
+
+    for await (const event of run) {
+      if (event.event === "thread.message.delta") {
+        const content = event.data.delta.content;
+        if (content && content.length > 0 && content[0].type === "text") {
+          const textValue = content[0].text.value;
+          fullResponse += textValue;
+          process.stdout.write(textValue);
+        }
+      } else if (event.event === "thread.run.completed") {
+        console.log("\nRun completed");
+      } else if (event.event === "thread.run.failed") {
+        console.error("\nRun failed:", event.data.last_error);
+      }
+    }
+
+    console.log("\n\nFull response:");
+    console.log(fullResponse);
+
+    return { threadId: thread.id, runId: run.id, response: fullResponse };
+  } catch (error) {
+    console.error("An error occurred:", error);
+  }
 }
 
-// Asistan yanıtını alma
-async function getAssistantResponse(thread, assistant) {
-  return new Promise((resolve, reject) => {
-    let assistantResponse = '';
-    const stream = openai.beta.threads.runs
-      .stream(thread.id, {
-        assistant_id: assistant.id,
-      })
-      .on('textCreated', () => console.log('Asistan yanıtlıyor...'))
-      .on('messageDone', async (event) => {
-        if (event.content[0].type === 'text') {
-          const { text } = event.content[0];
-          assistantResponse = text.value;
-          console.log('Asistanın yanıtı:');
-          console.log(assistantResponse);
-          resolve(assistantResponse);
-        } else {
-          resolve('');
-        }
-      })
-      .on('error', (error) => {
-        console.error('Hata oluştu:', error);
-        reject(error);
-      });
-  });
-}
 // Fonksiyonları dışa aktar
 module.exports = {
   getOrCreateAssistant,
-  createThread,
-  getAssistantResponse,
+  createThreadAndRunWithFileSearch,  // Yeni eklenen fonksiyon burada export ediliyor
 };

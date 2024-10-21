@@ -8,7 +8,6 @@ require('dotenv').config();
 // OpenAI API anahtarınızı burada da dahil edin
 const openai = require('./openai'); // openai.js dosyasından içe aktarın
 
-
 // Mevcut vektör deposu kimliği
 const VECTOR_STORE_ID = 'vs_tYRGrhw3IFawWD2TayYfHvFp'; // Mevcut vektör deposu kimliği
 
