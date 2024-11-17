@@ -9,7 +9,7 @@ require('dotenv').config();
 const openai = require('./openai'); // openai.js dosyasından içe aktarın
 
 // Mevcut asistan kimliği
-const ASSISTANT_ID = 'asst_Z368IKrzBf1H6onIjVIdz28j'; // Mevcut asistan kimliği
+const ASSISTANT_ID = 'asst_Z368aKrzBf1H6onIjVIdz28j'; // Mevcut asistan kimliği
 
 // Asistan oluşturma veya mevcut olanı alma
 async function getOrCreateAssistant() {
@@ -27,7 +27,7 @@ async function getOrCreateAssistant() {
   const assistant = await openai.beta.assistants.create({
     name: 'Sağlık Analist Asistanı',
     instructions: 'With 20 years of experience and having worked as a physiotherapist in various parts of the world, you are an expert in analyzing medical data to assess which training exercises might be risky for professional players. You are an AI designed to evaluate the given information about a professional player, then provide insights into which training exercises could be potentially harmful based on their previous and current training routines. While considering on-field activities such as shooting drills, running drills, and other common exercises, you give technical advice on exercises that might pose a risk, explaining why they could be dangerous. You offer suggestions but avoid making absolute statements, providing balanced guidance on what could impact the player’s health and performance.',
-    model: 'gpt-4o',
+    model: 'gpt-4o-mini',
     tools: [{ type: 'file_search' }],
   });
   console.log('Yeni asistan oluşturuldu:', assistant.id);

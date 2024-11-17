@@ -64,7 +64,7 @@ let vectorStore;
 const db = admin.database();
 
 app.use(bodyParser.json());
-app.use(cors()); 
+app.use(cors());
 
 function apiKeyMiddleware(req, res, next) {
   const apiKey = req.params.apiAnahtari;
@@ -75,43 +75,90 @@ function apiKeyMiddleware(req, res, next) {
 }
 
 app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
-    const { language, data, sport } = req.body;
+  const { language, data, sport } = req.body;
 
-    if (!language || !data) {
-        return res.status(400).json({ message: 'Geçersiz istek. Dil ve veri gereklidir.' });
+  if (!language || !data) {
+    return res.status(400).json({ message: 'Geçersiz istek. Dil ve veri gereklidir.' });
+  }
+
+  const { prompt, id } = promptGenerator(data.value);
+
+  const ref = db.ref("analyses");
+  const analysisRef = ref.child(id);
+
+  try {
+    // Veritabanı kontrolü
+    const snapshot = await analysisRef.once('value');
+    if (snapshot.exists()) {
+      // Eğer analiz varsa, SSE formatında gönder ve bitir
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      });
+      const existingAnalysis = snapshot.val().analysis;
+      res.write(`data: ${JSON.stringify({ content: existingAnalysis })}\n\n`);
+      res.write('data: [DONE]\n\n');
+      return res.end();
     }
 
-    const { prompt, id } = promptGenerator(data.value);
+    // SSE headers
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    });
 
-    const ref = db.ref("analyses");
-    const analysisRef = ref.child(id);
+    // Kullanıcı mesajını oluştur
+    const userMessage = `Using the data provided to you, List the names of the files you last used with file search.,create an analysis in ${language} and specifically identify which training exercises are risky. Explain the reasons in short sentences. When providing risk levels, keep in mind that the rating system is as follows: DisabilityType / Injury Levels are: { Normal, ShouldObserve, ShouldProtect, Attention, Urgent } TirednessType / Fatigue Levels are: { Normal, Tired, Exhausted, Urgent } Data: ${prompt}`;
 
-    try {
-        // Veritabanında belirli bir ID ile analiz olup olmadığını kontrol etme
-        const snapshot = await analysisRef.once('value');
-        if (snapshot.exists()) {
-            // Eğer analiz zaten varsa, bu analizi döndür
-            const existingAnalysis = snapshot.val().analysis;
-            return res.json({ analysis: existingAnalysis });
+    let fullResponse = '';
+
+    // Thread ve run oluştur
+    const thread = await openai.beta.threads.create();
+    await openai.beta.threads.messages.create(thread.id, {
+      role: "user",
+      content: userMessage
+    });
+
+    const run = await openai.beta.threads.runs.create(thread.id, {
+      assistant_id: assistant.id,
+      tools: [{ type: "file_search" }],
+      tool_resources: {
+        file_search: {
+          vector_store_ids: [vectorStore.id]
         }
+      },
+      stream: true
+    });
 
-        // Kullanıcı mesajını oluştur
-        const userMessage = `Using the data provided to you, create an analysis in ${language} and specifically identify which training exercises are risky. Explain the reasons in short sentences. When providing risk levels, keep in mind that the rating system is as follows: DisabilityType / Injury Levels are: { Normal, ShouldObserve, ShouldProtect, Attention, Urgent } TirednessType / Fatigue Levels are: { Normal, Tired, Exhausted, Urgent } Data: ${prompt}`;
-
-        // Yeni thread ve dosya arama işlemi başlat
-        const { threadId, runId, response } = await createThreadAndRunWithFileSearch(assistant.id, vectorStore.id, userMessage);
-
-        // Yeni analizi veritabanına kaydetme
-        await analysisRef.set({
-            analysis: response,
-            timestamp: admin.database.ServerValue.TIMESTAMP
-        });
-
-        return res.json({ analysis: response });
-    } catch (error) {
-        console.error('Error:', error.message);
-        return res.status(500).json({ message: 'API çağrısı sırasında bir hata oluştu.', error: error.message });
+    // Stream'i işle ve gönder
+    for await (const event of run) {
+      if (event.event === "thread.message.delta") {
+        const content = event.data.delta.content;
+        if (content && content.length > 0 && content[0].type === "text") {
+          const textValue = content[0].text.value;
+          fullResponse += textValue;
+          res.write(`data: ${JSON.stringify({ content: textValue })}\n\n`);
+        }
+      }
     }
+
+    // Veritabanına kaydet
+    await analysisRef.set({
+      analysis: fullResponse,
+      timestamp: admin.database.ServerValue.TIMESTAMP
+    });
+
+    // Stream'i sonlandır
+    res.write('data: [DONE]\n\n');
+    res.end();
+
+  } catch (error) {
+    console.error('Error:', error);
+    res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
+    res.end();
+  }
 });
 
 // Tekrar app.listen çağrısına gerek yok, yukarıda zaten var
