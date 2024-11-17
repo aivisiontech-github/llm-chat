@@ -110,7 +110,51 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
     });
 
     // Kullanıcı mesajını oluştur
-    const userMessage = `Using the data provided to you, List the names of the files you last used with file search.,create an analysis in ${language} and specifically identify which training exercises are risky. Explain the reasons in short sentences. When providing risk levels, keep in mind that the rating system is as follows: DisabilityType / Injury Levels are: { Normal, ShouldObserve, ShouldProtect, Attention, Urgent } TirednessType / Fatigue Levels are: { Normal, Tired, Exhausted, Urgent } Data: ${prompt}`;
+    const userMessage = `Based on provided data, create a focused analysis of risky exercises for ${sport} sport in ${language}. Use RAG system references for sport-specific exercise recommendations.
+
+    HEADING STRUCTURE:
+    ${language === 'Turkish' ? `
+    # Analiz ve Riskli Antrenman Egzersizleri
+    
+    ## Riskli Egzersizler ve Öneriler
+    
+    ### 1. [Egzersiz Adı]
+    
+    ## Sonuç ve Öneriler`
+        : language === 'English' ? `
+    # Analysis and High-Risk Training Exercises
+    
+    ## High-Risk Exercises and Recommendations
+    
+    ### 1. [Exercise Name]
+    
+    ## Conclusions and Recommendations`
+          : `[Other languages follow similar structure]`}
+    
+    EXERCISE ANALYSIS FORMAT:
+    ### [Number]. **[Egzersiz Adı]**
+    - **Risk Düzeyi:** {Normal/ShouldObserve/ShouldProtect/Attention/Urgent}
+    - **Etkilenen Kas Grupları:** {İlgili kas grupları}
+    - **Detaylı Açıklama:** {En az 3 cümlelik detaylı açıklama}
+    - **Alternatif Öneriler:**
+      - {Alternatif 1}
+      - {Alternatif 2}
+      - {Alternatif 3}
+    
+    ANALYSIS REQUIREMENTS:
+    - Analyze at least 7 different exercises
+    - Focus on exercises specific to ${sport}
+    - Consider athlete's current risk levels from data
+    - Reference training methodologies from database
+    - Provide practical, implementable alternatives
+    - Add specific warnings using block quotes (>)
+    
+    CONCLUSIONS SHOULD:
+    - Summarize key risk areas
+    - Provide general training modification guidelines
+    - Include monitoring recommendations
+    
+    Data for analysis: ${prompt}`;
 
     let fullResponse = '';
 

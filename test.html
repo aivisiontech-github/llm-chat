@@ -1,353 +1,130 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analiz Akışı</title>
+    <title>Health Analysis Generator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
         }
 
-        #result {
+        textarea {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0 15px;
+            min-height: 300px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+
+        #output {
             white-space: pre-wrap;
-            background-color: #f9f9f9;
             border: 1px solid #ddd;
             padding: 10px;
             margin-top: 20px;
-            width: 80%;
-            height: 400px;
-            overflow-y: scroll;
+            min-height: 200px;
+            font-family: monospace;
+            background-color: #f5f5f5;
         }
 
         button {
             padding: 10px 20px;
-            font-size: 16px;
-            background-color: #28a745;
+            background-color: #007bff;
             color: white;
             border: none;
+            border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
         }
 
-        button:disabled {
-            background-color: #6c757d;
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .loading {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
     </style>
 </head>
 
 <body>
+    <h1>AI4Sports Analysis Generator</h1>
 
-    <h1>Analiz Akışı</h1>
-    <button id="analyzeBtn">Analiz Yap</button>
+    <textarea id="inputData" placeholder="Paste your JSON data here" required></textarea>
 
-    <div id="result"></div>
+    <button onclick="generateAnalysis()" id="analyzeBtn">Generate Analysis</button>
+    <div id="output"></div>
 
     <script>
-        async function fetchStream() {
-            const resultDiv = document.getElementById('result');
-            resultDiv.textContent = ''; // Önceki sonuçları temizle
-            const button = document.getElementById('analyzeBtn');
-            button.disabled = true;
-            button.textContent = 'Analiz Devam Ediyor...';
+        // Sayfa yüklendiğinde örnek veriyi textarea'ya yerleştir
+        document.getElementById('inputData').value = JSON.stringify({
+            "language": "Türkçe",
+            "sport": "Football",
+            "data": {
+                "value": {
+                    // Buraya örnek veri gelecek
+                }
+            }
+        }, null, 2);
+
+        async function generateAnalysis() {
+            const output = document.getElementById('output');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const inputData = document.getElementById('inputData');
+
+            output.textContent = ''; // Clear previous output
+            analyzeBtn.disabled = true;
+            analyzeBtn.classList.add('loading');
 
             try {
+                let inputJson = JSON.parse(inputData.value);
+
                 const response = await fetch('http://localhost:3000/analiz/test', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({
-                        "language": "Türkçe",
-                        "sport": "Basketbol",
-                        "data": {
-                            "value": {
-                                "id": "241890a2-63a2-013b-3e51-4bd4b321a211",
-                                "sessionId": "eb92b3d4-c278-49ff-9d2e-c57ec9005ab3",
-                                "analyzeType": "Upper",
-                                "analyzeSideType": "Back",
-                                "date": "2024-07-08T10:27:56.997025",
-                                "thermalAnalyzeData": [
-                                    {
-                                        "id": "1b075c32-3880-40f7-a3d2-782942ad5a7a",
-                                        "muscleType": "Gluteal",
-                                        "date": "2024-07-08T10:27:56.997025",
-                                        "tiredness": "Normal",
-                                        "disability": "Normal",
-                                        "temperatureDiff": 0.075,
-                                        "leftBodyTemperature": {
-                                            "max": 34.578,
-                                            "min": 23.538,
-                                            "mean": 33.186
-                                        },
-                                        "rightBodyTemperature": {
-                                            "max": 34.863,
-                                            "min": 26.148,
-                                            "mean": 33.111
-                                        }
-                                    },
-                                    {
-                                        "id": "288a6df4-c6b3-4191-a4b2-ad6ae11bdee9",
-                                        "muscleType": "RotatorCuff",
-                                        "date": "2024-07-08T10:27:56.997025",
-                                        "tiredness": "Urgent",
-                                        "disability": "Normal",
-                                        "temperatureDiff": 0.213,
-                                        "leftBodyTemperature": {
-                                            "max": 34.535,
-                                            "min": 22.818,
-                                            "mean": 33.531
-                                        },
-                                        "rightBodyTemperature": {
-                                            "max": 34.925,
-                                            "min": 21.008,
-                                            "mean": 33.744
-                                        }
-                                    },
-                                    {
-                                        "id": "30a4edd1-4efe-4832-a2fe-131cb2ad84a3",
-                                        "muscleType": "Lumbar",
-                                        "date": "2024-07-08T10:27:56.997025",
-                                        "tiredness": "Normal",
-                                        "disability": "ShouldProtect",
-                                        "temperatureDiff": 0.794,
-                                        "leftBodyTemperature": {
-                                            "max": 33.638,
-                                            "min": 28.781,
-                                            "mean": 32.674
-                                        },
-                                        "rightBodyTemperature": {
-                                            "max": 33.453,
-                                            "min": 27.67,
-                                            "mean": 31.88
-                                        }
-                                    },
-                                    {
-                                        "id": "4bf48904-8a9f-4a51-92d1-15fbc8b6c572",
-                                        "muscleType": "Trapeze",
-                                        "date": "2024-07-08T10:27:56.997025",
-                                        "tiredness": "Normal",
-                                        "disability": "Normal",
-                                        "temperatureDiff": 0.034,
-                                        "leftBodyTemperature": {
-                                            "max": 35.621,
-                                            "min": 23.136,
-                                            "mean": 34.686
-                                        },
-                                        "rightBodyTemperature": {
-                                            "max": 35.621,
-                                            "min": 24.708,
-                                            "mean": 34.652
-                                        }
-                                    },
-                                    {
-                                        "id": "6ca016c2-bd69-4c68-8dc2-53c9a6026c42",
-                                        "muscleType": "Cervical",
-                                        "date": "2024-07-08T10:27:56.997025",
-                                        "tiredness": "Normal",
-                                        "disability": "Normal",
-                                        "temperatureDiff": 0.034,
-                                        "leftBodyTemperature": {
-                                            "max": 34.636,
-                                            "min": 22.818,
-                                            "mean": 33.204
-                                        },
-                                        "rightBodyTemperature": {
-                                            "max": 34.8,
-                                            "min": 21.008,
-                                            "mean": 33.238
-                                        }
-                                    },
-                                    {
-                                        "id": "8946c449-3cd0-45c4-9d50-4b05e11a07d3",
-                                        "muscleType": "Carpel",
-                                        "date": "2024-07-08T10:27:56.997025",
-                                        "tiredness": "Normal",
-                                        "disability": "Urgent",
-                                        "temperatureDiff": 2.334,
-                                        "leftBodyTemperature": {
-                                            "max": 32.817,
-                                            "min": 25.53,
-                                            "mean": 31.383
-                                        },
-                                        "rightBodyTemperature": {
-                                            "max": 30.792,
-                                            "min": 24.634,
-                                            "mean": 29.049
-                                        }
-                                    },
-                                    {
-                                        "id": "905210e9-0e44-49d5-966e-8e874f8b2c44",
-                                        "muscleType": "Triceps",
-                                        "date": "2024-07-08T10:27:56.997025",
-                                        "tiredness": "Normal",
-                                        "disability": "Normal",
-                                        "temperatureDiff": 0.163,
-                                        "leftBodyTemperature": {
-                                            "max": 33.652,
-                                            "min": 22.818,
-                                            "mean": 31.976
-                                        },
-                                        "rightBodyTemperature": {
-                                            "max": 33.555,
-                                            "min": 21.008,
-                                            "mean": 32.139
-                                        }
-                                    },
-                                    {
-                                        "id": "93d07227-2e97-474e-9514-9f829433b607",
-                                        "muscleType": "Olecranon",
-                                        "date": "2024-07-08T10:27:56.997025",
-                                        "tiredness": "Normal",
-                                        "disability": "Normal",
-                                        "temperatureDiff": 0.11,
-                                        "leftBodyTemperature": {
-                                            "max": 32.939,
-                                            "min": 31.082,
-                                            "mean": 32.131
-                                        },
-                                        "rightBodyTemperature": {
-                                            "max": 33.336,
-                                            "min": 28.194,
-                                            "mean": 32.021
-                                        }
-                                    },
-                                    {
-                                        "id": "a11bd98c-3476-4dd5-b800-4cd938ecade9",
-                                        "muscleType": "Flexor",
-                                        "date": "2024-07-08T10:27:56.997025",
-                                        "tiredness": "Normal",
-                                        "disability": "ShouldObserve",
-                                        "temperatureDiff": 0.549,
-                                        "leftBodyTemperature": {
-                                            "max": 33.155,
-                                            "min": 25.53,
-                                            "mean": 32.279
-                                        },
-                                        "rightBodyTemperature": {
-                                            "max": 33.521,
-                                            "min": 25.541,
-                                            "mean": 31.73
-                                        }
-                                    },
-                                    {
-                                        "id": "ce4aecac-256c-4e2b-ab5c-3b408777011c",
-                                        "muscleType": "Extansor",
-                                        "date": "2024-07-08T10:27:56.997025",
-                                        "tiredness": "Normal",
-                                        "disability": "Normal",
-                                        "temperatureDiff": 0.236,
-                                        "leftBodyTemperature": {
-                                            "max": 32.988,
-                                            "min": 27.531,
-                                            "mean": 31.612
-                                        },
-                                        "rightBodyTemperature": {
-                                            "max": 33.336,
-                                            "min": 21.402,
-                                            "mean": 31.376
-                                        }
-                                    },
-                                    {
-                                        "id": "dfe189f4-0f47-4896-8afd-352d0054088e",
-                                        "muscleType": "Deltoid",
-                                        "date": "2024-07-08T10:27:56.997025",
-                                        "tiredness": "Normal",
-                                        "disability": "Normal",
-                                        "temperatureDiff": 0.071,
-                                        "leftBodyTemperature": {
-                                            "max": 35.291,
-                                            "min": 29.955,
-                                            "mean": 33.736
-                                        },
-                                        "rightBodyTemperature": {
-                                            "max": 35.199,
-                                            "min": 33.042,
-                                            "mean": 33.807
-                                        }
-                                    },
-                                    {
-                                        "id": "fe06a39e-a29b-4cc5-8f35-3755fa82ceb7",
-                                        "muscleType": "Hand",
-                                        "date": "2024-07-08T10:27:56.997025",
-                                        "tiredness": "Normal",
-                                        "disability": "Urgent",
-                                        "temperatureDiff": 2.263,
-                                        "leftBodyTemperature": {
-                                            "max": 31.742,
-                                            "min": 19.51,
-                                            "mean": 28.803
-                                        },
-                                        "rightBodyTemperature": {
-                                            "max": 30.297,
-                                            "min": 19.041,
-                                            "mean": 26.54
-                                        }
-                                    }
-                                ],
-                                "athlete": {
-                                    "id": "e1e0bfea-ab3b-410c-9358-74fe232251de",
-                                    "positionName": "LM",
-                                    "profile": "",
-                                    "timestamp": "2024-07-06T15:14:05.673853Z",
-                                    "name": "Marco",
-                                    "surname": "Reus",
-                                    "nationality": "Germany",
-                                    "jerseyNumber": 123,
-                                    "birthDate": "1988-11-10T22:00:00",
-                                    "bodySize": {
-                                        "height": 188.00,
-                                        "weight": 88.00
-                                    },
-                                    "salary": 123123123.00,
-                                    "teamId": "4918bfd9-eb1e-4f0f-a60e-1fefac754c7e",
-                                    "gender": "Man",
-                                    "dominantSide": "Left"
-                                },
-                                "injuryImageUrl": "https://ai4sports-thermal.s3.amazonaws.com/2024-07-08_13-28-51__upper_injury_image.png",
-                                "tirednessImageUrl": "https://ai4sports-thermal.s3.amazonaws.com/2024-07-08_13-28-50__upper_fatique_image.png",
-                                "createdOnUtc": "2024-07-08T10:28:53.468985Z"
-                            },
-                            "error": {
-                                "code": "",
-                                "message": ""
-                            },
-                            "isSuccess": true
-                        }
-                    })
+                    body: JSON.stringify(inputJson)
                 });
 
-                if (!response.ok) {
-                    throw new Error('Analiz isteği başarısız oldu.');
-                }
-
                 const reader = response.body.getReader();
-                const decoder = new TextDecoder('utf-8');
-                let done = false;
-                let fullResponse = '';
+                const decoder = new TextDecoder();
 
-                while (!done) {
-                    const { value, done: readerDone } = await reader.read();
-                    done = readerDone;
-                    const chunk = decoder.decode(value, { stream: true });
-                    fullResponse += chunk;
-                    resultDiv.textContent += chunk;  // Veriyi anlık olarak ekranda göster
-                    resultDiv.scrollTop = resultDiv.scrollHeight;
+                while (true) {
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    const chunk = decoder.decode(value);
+                    const lines = chunk.split('\n');
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            try {
+                                const data = JSON.parse(line.slice(6));
+                                if (data.content) {
+                                    output.textContent += data.content;
+                                }
+                            } catch (error) {
+                                console.error('Error parsing JSON:', error);
+                            }
+                        }
+                    }
                 }
-
-                button.disabled = false;
-                button.textContent = 'Analiz Yap';
-
             } catch (error) {
-                resultDiv.textContent = 'Bir hata oluştu: ' + error.message;
-                button.disabled = false;
-                button.textContent = 'Analiz Yap';
+                console.error('Error:', error);
+                output.textContent = 'An error occurred while fetching the response: ' + error.message;
+            } finally {
+                analyzeBtn.disabled = false;
+                analyzeBtn.classList.remove('loading');
             }
         }
-
-        document.getElementById('analyzeBtn').addEventListener('click', fetchStream);
     </script>
-
 </body>
 
 </html>
