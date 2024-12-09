@@ -98,7 +98,7 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
       });
       const existingAnalysis = snapshot.val().analysis;
       res.write(`data: ${JSON.stringify({ content: existingAnalysis })}\n\n`);
-      res.write('data: [DONE]\n\n');
+      //res.write('data: [DONE]\n\n');
       return res.end();
     }
 
@@ -109,54 +109,47 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
       'Connection': 'keep-alive',
     });
 
-    // Kullanıcı mesajını oluştur
-    const userMessage = `Based on provided data, create a focused analysis of risky exercises for ${sport} sport in ${language}. Use RAG system references for sport-specific exercise recommendations.
+    const userMessage = `Create a focused exercise risk assessment in ${language}.
 
-    HEADING STRUCTURE:
-    ${language === 'Turkish' ? `
-    # Analiz ve Riskli Antrenman Egzersizleri
+    STRUCTURE:
+    1. Title: Exercise Assessment
     
-    ## Riskli Egzersizler ve Öneriler
+    2. Overview section:
+       - One paragraph summarizing all identified risks and key recommendations from the detailed sections below
+       
+    3. Main section for each affected muscle:
+       ### [Muscle Name] ([High Risk Exercise])
+       - Detailed explanation (2-3 sentences):
+         • Specific injury risks and mechanisms
+         • Potential complications
+         • Direct connection to current condition
+       - One precise alternative exercise with implementation details
+       > Critical warning signs to monitor
     
-    ### 1. [Egzersiz Adı]
+    4. Training Modifications section by exercise type
     
-    ## Sonuç ve Öneriler`
-        : language === 'English' ? `
-    # Analysis and High-Risk Training Exercises
+    KEY REQUIREMENTS:
+    - Provide clean markdown output without code blocks
+    - Keep technical terminology minimal
+    - Ensure overview accurately summarizes all detailed sections
+    - Focus on practical, forward-looking recommendations
+    - Give clear reasoning for each exercise restriction
+    - Provide one specific, detailed alternative per muscle
+    - Include only affected muscles from data
     
-    ## High-Risk Exercises and Recommendations
-    
-    ### 1. [Exercise Name]
-    
-    ## Conclusions and Recommendations`
-          : `[Other languages follow similar structure]`}
-    
-    EXERCISE ANALYSIS FORMAT:
-    ### [Number]. **[Egzersiz Adı]**
-    - **Risk Düzeyi:** {Normal/ShouldObserve/ShouldProtect/Attention/Urgent}
-    - **Etkilenen Kas Grupları:** {İlgili kas grupları}
-    - **Detaylı Açıklama:** {En az 3 cümlelik detaylı açıklama}
-    - **Alternatif Öneriler:**
-      - {Alternatif 1}
-      - {Alternatif 2}
-      - {Alternatif 3}
-    
-    ANALYSIS REQUIREMENTS:
-    - Analyze at least 7 different exercises
-    - Focus on exercises specific to ${sport}
-    - Consider athlete's current risk levels from data
-    - Reference training methodologies from database
-    - Provide practical, implementable alternatives
-    - Add specific warnings using block quotes (>)
-    
-    CONCLUSIONS SHOULD:
-    - Summarize key risk areas
-    - Provide general training modification guidelines
-    - Include monitoring recommendations
+    IMPORTANT:
+    - Do not mention analysis methods or data sources in the output
+    - Keep focus on recommendations and risks, not diagnostics
+    - Avoid technical jargon when possible
+    - Make sure overview connects with detailed sections
     
     Data for analysis: ${prompt}`;
 
+
     let fullResponse = '';
+
+    console.log("UserMessage: ", userMessage);
+
 
     // Thread ve run oluştur
     const thread = await openai.beta.threads.create();
@@ -167,7 +160,12 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
 
     const run = await openai.beta.threads.runs.create(thread.id, {
       assistant_id: assistant.id,
-      tools: [{ type: "file_search" }],
+      tools: [{
+        type: "file_search",
+        file_search: {
+          max_num_results: 10
+        }
+      }],
       tool_resources: {
         file_search: {
           vector_store_ids: [vectorStore.id]
@@ -195,7 +193,7 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
     });
 
     // Stream'i sonlandır
-    res.write('data: [DONE]\n\n');
+    //res.write('data: [DONE]\n\n');
     res.end();
 
   } catch (error) {
