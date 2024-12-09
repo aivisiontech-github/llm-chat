@@ -109,16 +109,16 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
       'Connection': 'keep-alive',
     });
 
-    const userMessage = `Create a focused exercise risk assessment in ${language}.
+    const userMessage = `Create a focused exercise risk assessment in ${language} and spesificly this sport: ${sport}.
 
     STRUCTURE:
-    1. Title: Exercise Assessment
+    1. Title: Exercise Assessment (Start with one hashtag # hierarchy)
     
     2. Overview section:
        - One paragraph summarizing all identified risks and key recommendations from the detailed sections below
        
     3. Main section for each affected muscle:
-       ### [Muscle Name] ([High Risk Exercise])
+       ### [Muscle Name] ([High Risk Exercise]) (with two hashtag ## hierarchy)
        - Detailed explanation (2-3 sentences):
          • Specific injury risks and mechanisms
          • Potential complications
@@ -134,6 +134,7 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
     - Ensure overview accurately summarizes all detailed sections
     - Focus on practical, forward-looking recommendations
     - Give clear reasoning for each exercise restriction
+    - Do not make the headings in other languages other than ${language}
     - Provide one specific, detailed alternative per muscle
     - Include only affected muscles from data
     
@@ -142,6 +143,7 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
     - Keep focus on recommendations and risks, not diagnostics
     - Avoid technical jargon when possible
     - Make sure overview connects with detailed sections
+    - Start the report with one hashtag # hierarchy
     
     Data for analysis: ${prompt}`;
 

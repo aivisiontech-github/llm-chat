@@ -3,20 +3,45 @@ const fs = require('fs');
 // JSON dosyasının yolunu belirtin
 const filePath = './exampledata.json';
 
-// JSON dosyasını oku ve objeye çevir
-// fs.readFile(filePath, 'utf8', (err, data) => {
-//     if (err) {
-//         console.error('Dosya okuma hatası:', err);
-//         return;
-//     }
-//     try {
-//         const jsonObject = JSON.parse(data).value;
-//         const response = promptGenerator(jsonObject)
-//         console.log(response);
-//     } catch (parseErr) {
-//         console.error('JSON parse hatası:', parseErr);
-//     }
-// });
+
+function getMusclesForAnalysisType(analyzeType, analyzeSideType) {
+    const muscles = {
+        'Lower': {
+            'Front': [
+                'Patellar', 'Tibialis Anterior', 'Quadriceps Vastus', 'Ankle',
+                'Vastus Medialis', 'Top Adductor', 'Quadriceps Rectus',
+                'Gastrocnemius and Soleus', 'Feet'
+            ],
+            'Back': [
+                'Achilles', 'Biceps Femoris / Hamstring Lateral', 'Calceneal',
+                'Gastrocnemius Lateralis / Calf Lateralis',
+                'Gastrocnemius Medialis / Calf Medialis', 'Hamstring Medialis',
+                'Popliteal', 'Top Adductor', 'Vastus Lateralis'
+            ]
+        },
+        'Upper': {
+            'Front': [
+                'Abdominal', 'Biceps', 'Carpel', 'Cervical', 'Deltoid',
+                'Extansor', 'Flexor', 'Hand', 'Hypochondriac region',
+                'Olecranon', 'Pectoral', 'Upper Collarbone and Supraclavicular Region'
+            ],
+            'Back': [
+                'Carpel', 'Cervical', 'Deltoid', 'Extansor', 'Flexor',
+                'Gluteal', 'Hand', 'Lumbar(Paravertebral/Latissumus Dorsi)',
+                'Olecranon', 'Rotator Cuff', 'Trapezius', 'Triceps'
+            ]
+        }
+    };
+
+    if (analyzeType === 'Fullbody') {
+        return analyzeSideType === 'Front' ?
+            [...muscles['Upper']['Front'], ...muscles['Lower']['Front']] :
+            [...muscles['Upper']['Back'], ...muscles['Lower']['Back']];
+    }
+
+    return muscles[analyzeType][analyzeSideType];
+}
+
 
 function thermalAnalyze(data) {
     let anamolies = [];
@@ -44,12 +69,19 @@ module.exports = function promptGenerator(data) {
         return new Date(dateString).toLocaleDateString(undefined, options);
     };
 
+    const relevantMuscles = getMusclesForAnalysisType(analyzeType, analyzeSideType);
+
     const generateAnomalyReport = (anamolies) => {
         if (anamolies.length === 0) {
             return "No anomalies detected.";
         }
 
-        return anamolies.map(anomaly => {
+        // Sadece ilgili kas gruplarındaki anomalileri filtrele
+        const filteredAnomalies = anamolies.filter(anomaly =>
+            relevantMuscles.includes(anomaly.muscleType)
+        );
+
+        return filteredAnomalies.map(anomaly => {
             let details = `Muscle Type: ${anomaly.muscleType}`;
             if (anomaly.tiredness && anomaly.disability) {
                 details += `, Tiredness: ${anomaly.tiredness}, Disability: ${anomaly.disability}`;
@@ -62,8 +94,15 @@ module.exports = function promptGenerator(data) {
         }).join('; ');
     };
 
-    const prompt = `The athlete, who plays as a ${positionName}, was born on ${formatDate(birthDate)} and is ${gender}. The athlete's dominant side is ${dominantSide}. With a height of ${height} cm and a weight of ${weight} kg, the athlete underwent a ${analyzeType} focusing on the ${analyzeSideType} side.Upon analyzing the thermal data,the following anomalies were detected: ${generateAnomalyReport(anamolies)}. `;
+    const prompt = `Sporcunun alınan ${analyzeType} ${analyzeSideType} termal görüntüsü değerlendirilmiştir.
+    
+Sporcu Bilgileri: ${positionName} pozisyonunda oynayan sporcu ${formatDate(birthDate)} doğumlu ve ${gender}. Sporcunun dominant tarafı ${dominantSide}. Boy: ${height} cm, Kilo: ${weight} kg.
+
+Analiz Sonucu: ${generateAnomalyReport(anamolies)}
+
+Not: Bu değerlendirme AI4Sports yapay zeka ve termografi ile sporcu sakatlık ve yorgunluk risk analizi sonucudur. Sakatlık riski seviyeleri (düşükten yükseğe): Normal, Should Observe, Should Protect, Attention, Urgent. Yorgunluk riski seviyeleri (düşükten yükseğe): Normal, Low, Average, High.`;
 
     return { prompt, id };
 }
+
 
