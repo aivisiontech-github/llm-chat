@@ -8,25 +8,21 @@ require('dotenv').config();
 // OpenAI API anahtarınızı burada da dahil edin
 const openai = require('./openai'); // openai.js dosyasından içe aktarın
 
-// Mevcut asistan kimliği
-const ASSISTANT_ID = 'asst_8lkR4QgTlBidzFznrX7Ui0We'; // Mevcut asistan kimliği
+const Normal_ASSISTANT_ID = 'asst_8lkR4QgTlBidzFznrX7Ui0We';
+const Carpal_ASSISTANT_ID = "asst_ZSV8TYJxnCIl6ymT254x6OOl";
 
-// Asistan oluşturma veya mevcut olanı alma
-async function getOrCreateAssistant() {
-  if (ASSISTANT_ID) {
-    // Mevcut asistanı alın
-    try {
-      const assistant = await openai.beta.assistants.retrieve(ASSISTANT_ID);
-      console.log('Mevcut asistan kullanılıyor:', assistant.id);
-      return assistant;
-    } catch (error) {
-      console.error('Mevcut asistan alınamadı, yeni bir asistan oluşturuluyor...');
-    }
-  }
-  // Yeni bir asistan oluşturun
-  const assistant = await openai.beta.assistants.create({
-    name: 'Sağlık Analist Asistanı',
-    instructions: `You are a specialized sports physiotherapist and athletic performance coach utilizing thermal data to assess fatigue and injury risk parameters. Based on thermography-identified fatigue and injuries risk levels, provide recommendations on which exercises athletes should avoid. Additionally, occasionally suggest alternative exercises or preventive practices to mitigate these risks. Your output should be concise, avoiding lengthy general information and focusing on specific situations. Work in conjunction with a file search system, addressing only reported problematic muscle groups and offering recommendations specific to these areas.
+async function getOrCreateAssistant(analyzeType) {
+  const ASSISTANT_ID = analyzeType === 'Carpal' ? Carpal_ASSISTANT_ID : Normal_ASSISTANT_ID;
+
+  try {
+    const assistant = await openai.beta.assistants.retrieve(ASSISTANT_ID);
+    console.log('Mevcut asistan kullanılıyor:', assistant.id);
+    return assistant;
+  } catch (error) {
+    console.error('Mevcut asistan alınamadı, yeni bir asistan oluşturuluyor...');
+    return await openai.beta.assistants.create({
+      name: analyzeType === 'Carpal' ? 'El Sağlığı Analist Asistanı' : 'Sağlık Analist Asistanı',
+      instructions: `You are a specialized sports physiotherapist and athletic performance coach utilizing thermal data to assess fatigue and injury risk parameters. Based on thermography-identified fatigue and injuries risk levels, provide recommendations on which exercises athletes should avoid. Additionally, occasionally suggest alternative exercises or preventive practices to mitigate these risks. Your output should be concise, avoiding lengthy general information and focusing on specific situations. Work in conjunction with a file search system, addressing only reported problematic muscle groups and offering recommendations specific to these areas.
 
 # Steps
 
@@ -45,13 +41,11 @@ Responses should be succinct and directly address the identified muscle issues a
 - Prioritize specific and reported issues over general advice.
 - Consider the file search system in identifying problematic areas.
 - Ensure that advice remains concise and relevant to the specific athlete's situation.`,
-    model: 'gpt-4o',
-    tools: [{ type: 'file_search' }],
-  });
-  console.log('Yeni asistan oluşturuldu:', assistant.id);
-  return assistant;
+      model: 'gpt-4o',
+      tools: [{ type: 'file_search' }],
+    });
+  }
 }
-
 // Yeni Thread ve Run oluşturma (Stream ve File Search ile)
 async function createThreadAndRunWithFileSearch(assistantId, vectorStoreId, userMessage) {
   try {

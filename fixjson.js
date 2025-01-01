@@ -1,542 +1,399 @@
 
 let input = JSON.stringify({
-    "language": "Turkish",
-    "sport": "Football",
-    "data": {
-      "value": {
-        "id": "b486355d-84c5-410d-b455-97f29470c2b2",
-        "sessionId": "22f58672-353d-4bed-8233-cc4562f4d73b",
-        "analyzeType": "Carpal",
-        "analyzeSideType": "Front",
-        "date": "2024-11-12T12:22:00.397",
-        "thermalAnalyzeData": [
+    language: 'Türkçe',
+    sport: 'Basketball',
+    data: {
+      value: {
+        id: '2d5c67e6-ff8c-4b08-b516-c850c279ebc6',
+        sessionId: '2c08dd78-707b-44ff-b6e1-6630c1f4485c',
+        analyzeType: 'Upper',
+        analyzeSideType: 'Front',
+        date: '2024-11-12T20:54:13.01',
+        thermalAnalyzeData: [
           {
-            "id": "1bea59c0-2081-4f17-ac7c-59c6fec7e371",
-            "muscleType": "Pinky",
-            "date": "2024-11-12T12:22:00.397",
-            "tiredness": null,
-            "disability": null,
-            "temperatureDiff": 0,
-            "leftBodyTemperature": {
-              "max": 34.043,
-              "min": 28.328,
-              "mean": 32.43
-            },
-            "rightBodyTemperature": null
+            id: '10099cc4-a964-470f-be5a-667cb0324e2e',
+            muscleType: 'Deltoid',
+            date: '2024-11-12T20:54:13.01',
+            tiredness: 'Urgent',
+            disability: 'ShouldObserve',
+            temperatureDiff: 0.622,
+            leftBodyTemperature: { max: 34.31, min: 25.013, mean: 32.614 },
+            rightBodyTemperature: { max: 34.788, min: 25.176, mean: 33.236 }
           },
           {
-            "id": "2065e59a-ff49-4079-a6be-9ec617e9e064",
-            "muscleType": "Middle",
-            "date": "2024-11-12T12:22:00.397",
-            "tiredness": null,
-            "disability": null,
-            "temperatureDiff": 0,
-            "leftBodyTemperature": {
-              "max": 34.756,
-              "min": 28.113,
-              "mean": 33.094
-            },
-            "rightBodyTemperature": null
+            id: '1d2b98d8-4476-41f2-b38c-951fc9a71369',
+            muscleType: 'Extansor',
+            date: '2024-11-12T20:54:13.01',
+            tiredness: 'Urgent',
+            disability: 'ShouldObserve',
+            temperatureDiff: 0.658,
+            leftBodyTemperature: { max: 32.67, min: 25.263, mean: 31.475 },
+            rightBodyTemperature: { max: 33.708, min: 29.286, mean: 32.133 }
           },
           {
-            "id": "2cc4765a-eeb1-433c-93d2-22de26738039",
-            "muscleType": "HandCarpal",
-            "date": "2024-11-12T12:22:00.397",
-            "tiredness": null,
-            "disability": "ShouldProtect",
-            "temperatureDiff": 0,
-            "leftBodyTemperature": {
-              "max": 0,
-              "min": 0,
-              "mean": 0
-            },
-            "rightBodyTemperature": null
+            id: '30d76410-1e5c-4fe7-939e-559f8b31c4f5',
+            muscleType: 'Collarbone',
+            date: '2024-11-12T20:54:13.01',
+            tiredness: 'Normal',
+            disability: 'Normal',
+            temperatureDiff: 0.073,
+            leftBodyTemperature: { max: 35.175, min: 25.452, mean: 33.149 },
+            rightBodyTemperature: { max: 34.235, min: 27.048, mean: 33.222 }
           },
           {
-            "id": "34606251-4845-4a52-8d11-b084095c42a7",
-            "muscleType": "Index",
-            "date": "2024-11-12T12:22:00.397",
-            "tiredness": null,
-            "disability": null,
-            "temperatureDiff": 0,
-            "leftBodyTemperature": {
-              "max": 34.532,
-              "min": 28.799,
-              "mean": 33.221
-            },
-            "rightBodyTemperature": null
+            id: '33986081-472c-4056-8466-898567f1cdbb',
+            muscleType: 'Hand',
+            date: '2024-11-12T20:54:13.01',
+            tiredness: 'Normal',
+            disability: 'Normal',
+            temperatureDiff: 0.071,
+            leftBodyTemperature: { max: 31.363, min: 23.882, mean: 29.16 },
+            rightBodyTemperature: { max: 31.613, min: 23.478, mean: 29.231 }
           },
           {
-            "id": "94a8e0cc-10ec-4fc0-a5b4-ea1fa7e5423d",
-            "muscleType": "Tumb",
-            "date": "2024-11-12T12:22:00.397",
-            "tiredness": null,
-            "disability": null,
-            "temperatureDiff": 0,
-            "leftBodyTemperature": {
-              "max": 35.343,
-              "min": 28.778,
-              "mean": 33.922
-            },
-            "rightBodyTemperature": null
+            id: '45ca5dea-37b9-428e-bad4-8fd381d9a7b9',
+            muscleType: 'Flexor',
+            date: '2024-11-12T20:54:13.01',
+            tiredness: 'Urgent',
+            disability: 'Normal',
+            temperatureDiff: 0.102,
+            leftBodyTemperature: { max: 32.632, min: 27.848, mean: 31.747 },
+            rightBodyTemperature: { max: 33.519, min: 24.526, mean: 31.849 }
           },
           {
-            "id": "c8128ee2-c1b6-4b79-8a35-f771abebe1c5",
-            "muscleType": "Palmaris",
-            "date": "2024-11-12T12:22:00.397",
-            "tiredness": null,
-            "disability": null,
-            "temperatureDiff": 0,
-            "leftBodyTemperature": {
-              "max": 36.189,
-              "min": 33.367,
-              "mean": 35.03
-            },
-            "rightBodyTemperature": null
+            id: '4731159b-d616-4b56-b10e-b74132d2e857',
+            muscleType: 'Cervical',
+            date: '2024-11-12T20:54:13.01',
+            tiredness: 'Urgent',
+            disability: 'ShouldObserve',
+            temperatureDiff: 0.437,
+            leftBodyTemperature: { max: 35.231, min: 28.868, mean: 33.661 },
+            rightBodyTemperature: { max: 34.324, min: 29.375, mean: 33.224 }
           },
           {
-            "id": "d37c4bcf-82a2-420d-8d16-7ba2dd3c96e4",
-            "muscleType": "Hypothenar",
-            "date": "2024-11-12T12:22:00.397",
-            "tiredness": null,
-            "disability": null,
-            "temperatureDiff": 0,
-            "leftBodyTemperature": {
-              "max": 35.202,
-              "min": 29.439,
-              "mean": 33.463
-            },
-            "rightBodyTemperature": null
+            id: '4a0635f6-67eb-4f11-afea-c77804067f8f',
+            muscleType: 'Abdominal',
+            date: '2024-11-12T20:54:13.01',
+            tiredness: 'Normal',
+            disability: 'Normal',
+            temperatureDiff: 0.288,
+            leftBodyTemperature: { max: 34.329, min: 25.401, mean: 32.532 },
+            rightBodyTemperature: { max: 34.17, min: 27.634, mean: 32.82 }
           },
           {
-            "id": "faafbcee-d104-493a-9603-250a7df9323c",
-            "muscleType": "Ring",
-            "date": "2024-11-12T12:22:00.397",
-            "tiredness": null,
-            "disability": null,
-            "temperatureDiff": 0,
-            "leftBodyTemperature": {
-              "max": 34.573,
-              "min": 28.842,
-              "mean": 32.939
-            },
-            "rightBodyTemperature": null
+            id: '4a5c07f4-4866-47d0-89af-53a84ce0a16e',
+            muscleType: 'Olecranon',
+            date: '2024-11-12T20:54:13.01',
+            tiredness: 'Urgent',
+            disability: 'ShouldObserve',
+            temperatureDiff: 0.677,
+            leftBodyTemperature: { max: 33.543, min: 27.119, mean: 32.522 },
+            rightBodyTemperature: { max: 33.765, min: 31.001, mean: 33.199 }
           },
           {
-            "id": "ff4d4bb1-c63b-4f2c-8cf4-4dc0d3569ddd",
-            "muscleType": "Thenar",
-            "date": "2024-11-12T12:22:00.397",
-            "tiredness": null,
-            "disability": null,
-            "temperatureDiff": 0,
-            "leftBodyTemperature": {
-              "max": 35.988,
-              "min": 30.032,
-              "mean": 34.449
-            },
-            "rightBodyTemperature": null
+            id: '4b505124-bdb1-48a2-95d5-3c7c28cd7563',
+            muscleType: 'Pectoral',
+            date: '2024-11-12T20:54:13.01',
+            tiredness: 'Normal',
+            disability: 'Normal',
+            temperatureDiff: 0.07,
+            leftBodyTemperature: { max: 34.521, min: 24.967, mean: 33.138 },
+            rightBodyTemperature: { max: 34.367, min: 25.13, mean: 33.068 }
+          },
+          {
+            id: '5ac7b975-5ef7-426a-859d-35ed59c7c6d1',
+            muscleType: 'Carpel',
+            date: '2024-11-12T20:54:13.01',
+            tiredness: 'Normal',
+            disability: 'Normal',
+            temperatureDiff: 0.042,
+            leftBodyTemperature: { max: 31.901, min: 26.288, mean: 30.969 },
+            rightBodyTemperature: { max: 32.012, min: 25.166, mean: 31.011 }
+          },
+          {
+            id: 'a9c0d7a1-55d6-408a-8135-ea37cdf313f0',
+            muscleType: 'Biceps',
+            date: '2024-11-12T20:54:13.01',
+            tiredness: 'Normal',
+            disability: 'ShouldObserve',
+            temperatureDiff: 0.583,
+            leftBodyTemperature: { max: 33.779, min: 25.013, mean: 32.225 },
+            rightBodyTemperature: { max: 34.024, min: 25.579, mean: 32.808 }
+          },
+          {
+            id: 'e017183a-909e-44be-b0dc-2c93d5962230',
+            muscleType: 'Hipokondriak',
+            date: '2024-11-12T20:54:13.01',
+            tiredness: 'Normal',
+            disability: 'Normal',
+            temperatureDiff: 0.162,
+            leftBodyTemperature: { max: 34.179, min: 24.967, mean: 33.081 },
+            rightBodyTemperature: { max: 34.155, min: 25.13, mean: 33.243 }
           }
         ],
-        "athlete": {
-          "id": "e8981fb0-45c5-46e1-8617-5d22ca83b77d",
-          "accountId": null,
-          "positions": [
-            "goalkeeper"
-          ],
-          "profile": " https://aivisiontech-hub.s3.eu-central-1.amazonaws.com/profile/e8981fb0-45c5-46e1-8617-5d22ca83b77d",
-          "timestamp": "2024-09-29T18:23:08.950779Z",
-          "name": "ben",
-          "surname": "10",
-          "nationality": "Brazil",
-          "jerseyNumber": 99,
-          "birthDate": "1999-11-03T22:00:00",
-          "bodySize": {
-            "height": 99,
-            "weight": 99
+        athlete: {
+          id: '64538a4a-a5cf-4dac-b42e-3ee912c8d0f3',
+          positions: [ 'center' ],
+          profile: '',
+          timestamp: null,
+          name: 'Batuhan',
+          surname: 'Beyzadeoğlu',
+          nationality: 'Türkiye',
+          jerseyNumber: 1,
+          birthDate: '2007-10-25T00:00:00',
+          bodySize: { height: 190, weight: 90 },
+          salary: 0,
+          teamId: 'a3df1c96-db93-4b57-be47-d850b5c5f5f2',
+          team: {
+            id: 'a3df1c96-db93-4b57-be47-d850b5c5f5f2',
+            creatorId: '37bdf431-58c0-485f-bff1-7b4fe04f12ae',
+            parentTeamId: 'ac23c55f-1ea0-48cf-8003-b64e5c3aeb06',
+            teamName: 'Konya Büyükşehir Belediye Basketbol Takımı ',
+            profile: null,
+            timestamp: null,
+            teamMembership: 'Paid',
+            sportType: 'Basketball',
+            type: 'Sub',
+            memberCount: 0,
+            athleteCount: 1,
+            createdOnUtc: '2024-09-25T07:32:18.774315Z'
           },
-          "teamId": "ddd36e30-986e-4b24-87b5-89be12740e88",
-          "team": {
-            "id": "ddd36e30-986e-4b24-87b5-89be12740e88",
-            "creatorId": "26ffcde7-bc8b-4294-afd7-66a8a250d37e",
-            "parentTeamId": null,
-            "teamName": "Aivisiontech Team",
-            "profile": "https://aivisiontech-hub.s3.eu-central-1.amazonaws.com/profile/ddd36e30-986e-4b24-87b5-89be12740e88",
-            "timestamp": "2024-10-09T12:30:09.49569Z",
-            "teamMembership": "Demo",
-            "sportType": "Football",
-            "type": "Main",
-            "memberCount": 0,
-            "athleteCount": 1,
-            "createdOnUtc": "2024-08-16T13:10:31.557025Z"
-          },
-          "gender": "Man",
-          "dominantSide": "Both",
-          "status": [],
-          "pmcs": [
+          gender: 'Man',
+          dominantSide: 'Right',
+          status: [],
+          pmcs: [
             {
-              "score": 3.81,
-              "muscleType": "Achilles",
-              "date": "2024-12-20T10:08:46.9760655Z"
+              score: 37.5,
+              muscleType: 'Hand',
+              date: '2024-11-13T08:19:35.7147524Z'
             },
             {
-              "score": 0,
-              "muscleType": "BicepsFemoris",
-              "date": "2024-12-20T10:08:46.9760665Z"
+              score: 51.79,
+              muscleType: 'Carpel',
+              date: '2024-11-13T08:19:35.7147355Z'
             },
             {
-              "score": 1.62,
-              "muscleType": "TopAdductor",
-              "date": "2024-12-20T10:08:46.9760666Z"
+              score: 32.5,
+              muscleType: 'Extansor',
+              date: '2024-11-13T08:19:35.7147402Z'
             },
             {
-              "score": 0,
-              "muscleType": "HamstringMedial",
-              "date": "2024-12-20T10:08:46.9760668Z"
+              score: 48.93,
+              muscleType: 'Flexor',
+              date: '2024-11-13T08:19:35.7147307Z'
             },
             {
-              "score": 4.1,
-              "muscleType": "VastusLateralis",
-              "date": "2024-12-20T10:08:46.9760669Z"
+              score: 35.36,
+              muscleType: 'Olecranon',
+              date: '2024-11-13T08:19:35.7147476Z'
             },
             {
-              "score": 0.1,
-              "muscleType": "CalfLateralis",
-              "date": "2024-12-20T10:08:46.976067Z"
+              score: 55.71,
+              muscleType: 'Triceps',
+              date: '2024-11-13T08:19:35.7147428Z'
             },
             {
-              "score": 2.95,
-              "muscleType": "CalfMedialis",
-              "date": "2024-12-20T10:08:46.9760671Z"
+              score: 23.93,
+              muscleType: 'Cervical',
+              date: '2024-11-13T08:19:35.7147605Z'
             },
             {
-              "score": 1.05,
-              "muscleType": "Calceneal",
-              "date": "2024-12-20T10:08:46.9760672Z"
+              score: 23.93,
+              muscleType: 'Deltoid',
+              date: '2024-11-13T08:19:35.7147652Z'
             },
             {
-              "score": 0.1,
-              "muscleType": "Popliteal",
-              "date": "2024-12-20T10:08:46.9760673Z"
+              score: 52.86,
+              muscleType: 'Trapeze',
+              date: '2024-11-13T08:19:35.7147255Z'
             },
             {
-              "score": 12.27,
-              "muscleType": "Hand",
-              "date": "2024-12-20T10:08:46.9760674Z"
+              score: 55.71,
+              muscleType: 'RotatorCuff',
+              date: '2024-11-13T08:19:35.714723Z'
             },
             {
-              "score": 0.29,
-              "muscleType": "Deltoid",
-              "date": "2024-12-20T10:08:46.9760676Z"
+              score: 50,
+              muscleType: 'Lumbar',
+              date: '2024-11-13T08:19:35.7147204Z'
             },
             {
-              "score": 11.03,
-              "muscleType": "Collarbone",
-              "date": "2024-12-20T10:08:46.9760677Z"
+              score: 50,
+              muscleType: 'Gluteal',
+              date: '2024-11-13T08:19:35.7147558Z'
             },
             {
-              "score": 1.05,
-              "muscleType": "Extansor",
-              "date": "2024-12-20T10:08:46.9760678Z"
+              score: 49.52,
+              muscleType: 'TopAdductor',
+              date: '2024-11-13T08:19:35.7147839Z'
             },
             {
-              "score": 3.05,
-              "muscleType": "Carpel",
-              "date": "2024-12-20T10:08:46.9760679Z"
+              score: 42.56,
+              muscleType: 'QuadricepsRectus',
+              date: '2024-11-13T08:19:35.7147878Z'
             },
             {
-              "score": 0,
-              "muscleType": "Abdominal",
-              "date": "2024-12-20T10:08:46.976068Z"
+              score: 28.49,
+              muscleType: 'QuadricepsVastus',
+              date: '2024-11-13T08:19:35.7147914Z'
             },
             {
-              "score": 0.29,
-              "muscleType": "Cervical",
-              "date": "2024-12-20T10:08:46.9760682Z"
+              score: 40.16,
+              muscleType: 'VastusMedialis',
+              date: '2024-11-13T08:19:35.7147959Z'
             },
             {
-              "score": 11.41,
-              "muscleType": "Flexor",
-              "date": "2024-12-20T10:08:46.9760683Z"
+              score: 8.02,
+              muscleType: 'Patellar',
+              date: '2024-11-13T08:19:35.7147996Z'
             },
             {
-              "score": 0,
-              "muscleType": "Pectoral",
-              "date": "2024-12-20T10:08:46.9760684Z"
+              score: 46.11,
+              muscleType: 'Gastrocnemius',
+              date: '2024-11-13T08:19:35.7148032Z'
             },
             {
-              "score": 0.76,
-              "muscleType": "Olecranon",
-              "date": "2024-12-20T10:08:46.9760685Z"
+              score: 52.17,
+              muscleType: 'TibialisAnterior',
+              date: '2024-11-13T08:19:35.7148069Z'
             },
             {
-              "score": 0,
-              "muscleType": "Biceps",
-              "date": "2024-12-20T10:08:46.9760686Z"
+              score: 19.67,
+              muscleType: 'FootAnkle',
+              date: '2024-11-13T08:19:35.7148107Z'
             },
             {
-              "score": 0.1,
-              "muscleType": "Hipokondriak",
-              "date": "2024-12-20T10:08:46.9760687Z"
+              score: 17.21,
+              muscleType: 'Foot',
+              date: '2024-11-13T08:19:35.7148145Z'
             },
             {
-              "score": 0.1,
-              "muscleType": "Trapeze",
-              "date": "2024-12-20T10:08:46.9760689Z"
+              score: 67.14,
+              muscleType: 'BicepsFemoris',
+              date: '2024-11-13T08:19:35.7148249Z'
             },
             {
-              "score": 0.1,
-              "muscleType": "Lumbar",
-              "date": "2024-12-20T10:08:46.976069Z"
+              score: 67.14,
+              muscleType: 'VastusLateralis',
+              date: '2024-11-13T08:19:35.7148197Z'
             },
             {
-              "score": 0.1,
-              "muscleType": "RotatorCuff",
-              "date": "2024-12-20T10:08:46.9760691Z"
+              score: 67.14,
+              muscleType: 'HamstringMedial',
+              date: '2024-11-13T08:19:35.7148171Z'
             },
             {
-              "score": 0,
-              "muscleType": "Triceps",
-              "date": "2024-12-20T10:08:46.9760692Z"
+              score: 64.29,
+              muscleType: 'Popliteal',
+              date: '2024-11-13T08:19:35.7148359Z'
             },
             {
-              "score": 0,
-              "muscleType": "Gluteal",
-              "date": "2024-12-20T10:08:46.9760693Z"
+              score: 55.71,
+              muscleType: 'CalfMedialis',
+              date: '2024-11-13T08:19:35.7148224Z'
             },
             {
-              "score": 0.1,
-              "muscleType": "FootAnkle",
-              "date": "2024-12-20T10:08:46.9760694Z"
+              score: 55.71,
+              muscleType: 'CalfLateralis',
+              date: '2024-11-13T08:19:35.7148282Z'
             },
             {
-              "score": 0,
-              "muscleType": "Patellar",
-              "date": "2024-12-20T10:08:46.9760696Z"
+              score: 55.71,
+              muscleType: 'Achilles',
+              date: '2024-11-13T08:19:35.7148308Z'
             },
             {
-              "score": 0,
-              "muscleType": "QuadricepsRectus",
-              "date": "2024-12-20T10:08:46.9760697Z"
+              score: 64.29,
+              muscleType: 'Calceneal',
+              date: '2024-11-13T08:19:35.7148333Z'
             },
             {
-              "score": 0.86,
-              "muscleType": "Foot",
-              "date": "2024-12-20T10:08:46.976087Z"
+              score: 52.86,
+              muscleType: 'Biceps',
+              date: '2024-11-13T08:19:35.7147754Z'
             },
             {
-              "score": 0.29,
-              "muscleType": "Gastrocnemius",
-              "date": "2024-12-20T10:08:46.9760874Z"
+              score: 50,
+              muscleType: 'Collarbone',
+              date: '2024-11-13T08:19:35.7147678Z'
             },
             {
-              "score": 0.38,
-              "muscleType": "TibialisAnterior",
-              "date": "2024-12-20T10:08:46.9760884Z"
+              score: 50,
+              muscleType: 'Pectoral',
+              date: '2024-11-13T08:19:35.7147729Z'
             },
             {
-              "score": 0,
-              "muscleType": "VastusMedialis",
-              "date": "2024-12-20T10:08:46.9760885Z"
+              score: 50,
+              muscleType: 'Abdominal',
+              date: '2024-11-13T08:19:35.7147703Z'
             },
             {
-              "score": 0.1,
-              "muscleType": "QuadricepsVastus",
-              "date": "2024-12-20T10:08:46.9760887Z"
+              score: 50,
+              muscleType: 'Hipokondriak',
+              date: '2024-11-13T08:19:35.7147779Z'
+            },
+            {
+              score: 52.86,
+              muscleType: 'HandCarpal',
+              date: '2024-11-13T08:19:35.7146948Z'
+            },
+            {
+              score: 50,
+              muscleType: 'Ring',
+              date: '2024-11-13T08:19:35.7146982Z'
+            },
+            {
+              score: 50,
+              muscleType: 'Hypothenar',
+              date: '2024-11-13T08:19:35.7147009Z'
+            },
+            {
+              score: 50,
+              muscleType: 'Tumb',
+              date: '2024-11-13T08:19:35.7147035Z'
+            },
+            {
+              score: 50,
+              muscleType: 'Index',
+              date: '2024-11-13T08:19:35.7147061Z'
+            },
+            {
+              score: 50,
+              muscleType: 'Middle',
+              date: '2024-11-13T08:19:35.7147091Z'
+            },
+            {
+              score: 50,
+              muscleType: 'Thenar',
+              date: '2024-11-13T08:19:35.7147117Z'
+            },
+            {
+              score: 50,
+              muscleType: 'Pinky',
+              date: '2024-11-13T08:19:35.7147152Z'
+            },
+            {
+              score: 50,
+              muscleType: 'Palmaris',
+              date: '2024-11-13T08:19:35.7147178Z'
             }
           ],
-          "pmss": null,
-          "pmts": [
-            {
-              "score": 0.1,
-              "muscleType": "Achilles",
-              "date": "2024-12-20T10:08:46.9760902Z"
-            },
-            {
-              "score": 0.38,
-              "muscleType": "BicepsFemoris",
-              "date": "2024-12-20T10:08:46.9760905Z"
-            },
-            {
-              "score": 0.1,
-              "muscleType": "TopAdductor",
-              "date": "2024-12-20T10:08:46.9760906Z"
-            },
-            {
-              "score": 0,
-              "muscleType": "HamstringMedial",
-              "date": "2024-12-20T10:08:46.9760907Z"
-            },
-            {
-              "score": 9.62,
-              "muscleType": "VastusLateralis",
-              "date": "2024-12-20T10:08:46.9760908Z"
-            },
-            {
-              "score": 0.1,
-              "muscleType": "CalfLateralis",
-              "date": "2024-12-20T10:08:46.9760909Z"
-            },
-            {
-              "score": 9.71,
-              "muscleType": "CalfMedialis",
-              "date": "2024-12-20T10:08:46.976091Z"
-            },
-            {
-              "score": 0,
-              "muscleType": "Calceneal",
-              "date": "2024-12-20T10:08:46.9760911Z"
-            },
-            {
-              "score": 0,
-              "muscleType": "Popliteal",
-              "date": "2024-12-20T10:08:46.9760913Z"
-            },
-            {
-              "score": 21.21,
-              "muscleType": "Hand",
-              "date": "2024-12-20T10:08:46.9760914Z"
-            },
-            {
-              "score": 21.3,
-              "muscleType": "Deltoid",
-              "date": "2024-12-20T10:08:46.9760915Z"
-            },
-            {
-              "score": 0.57,
-              "muscleType": "Collarbone",
-              "date": "2024-12-20T10:08:46.9760916Z"
-            },
-            {
-              "score": 22.92,
-              "muscleType": "Extansor",
-              "date": "2024-12-20T10:08:46.9760917Z"
-            },
-            {
-              "score": 1.9,
-              "muscleType": "Carpel",
-              "date": "2024-12-20T10:08:46.9760918Z"
-            },
-            {
-              "score": 0.38,
-              "muscleType": "Abdominal",
-              "date": "2024-12-20T10:08:46.976092Z"
-            },
-            {
-              "score": 1.81,
-              "muscleType": "Cervical",
-              "date": "2024-12-20T10:08:46.9760921Z"
-            },
-            {
-              "score": 33.19,
-              "muscleType": "Flexor",
-              "date": "2024-12-20T10:08:46.9760922Z"
-            },
-            {
-              "score": 0,
-              "muscleType": "Pectoral",
-              "date": "2024-12-20T10:08:46.9760923Z"
-            },
-            {
-              "score": 22.45,
-              "muscleType": "Olecranon",
-              "date": "2024-12-20T10:08:46.9760924Z"
-            },
-            {
-              "score": 11.03,
-              "muscleType": "Biceps",
-              "date": "2024-12-20T10:08:46.9760926Z"
-            },
-            {
-              "score": 0.57,
-              "muscleType": "Hipokondriak",
-              "date": "2024-12-20T10:08:46.9760927Z"
-            },
-            {
-              "score": 0.1,
-              "muscleType": "Trapeze",
-              "date": "2024-12-20T10:08:46.9760928Z"
-            },
-            {
-              "score": 0.67,
-              "muscleType": "Lumbar",
-              "date": "2024-12-20T10:08:46.9760929Z"
-            },
-            {
-              "score": 0.95,
-              "muscleType": "RotatorCuff",
-              "date": "2024-12-20T10:08:46.9760931Z"
-            },
-            {
-              "score": 0.86,
-              "muscleType": "Triceps",
-              "date": "2024-12-20T10:08:46.9760932Z"
-            },
-            {
-              "score": 0.48,
-              "muscleType": "Gluteal",
-              "date": "2024-12-20T10:08:46.9760933Z"
-            },
-            {
-              "score": 0.38,
-              "muscleType": "FootAnkle",
-              "date": "2024-12-20T10:08:46.9760934Z"
-            },
-            {
-              "score": 0.48,
-              "muscleType": "Patellar",
-              "date": "2024-12-20T10:08:46.9760935Z"
-            },
-            {
-              "score": 0.38,
-              "muscleType": "QuadricepsRectus",
-              "date": "2024-12-20T10:08:46.9760936Z"
-            },
-            {
-              "score": 0.19,
-              "muscleType": "Foot",
-              "date": "2024-12-20T10:08:46.9760937Z"
-            },
-            {
-              "score": 0.76,
-              "muscleType": "Gastrocnemius",
-              "date": "2024-12-20T10:08:46.9760939Z"
-            },
-            {
-              "score": 0,
-              "muscleType": "TibialisAnterior",
-              "date": "2024-12-20T10:08:46.9760941Z"
-            },
-            {
-              "score": 0.29,
-              "muscleType": "VastusMedialis",
-              "date": "2024-12-20T10:08:46.9760943Z"
-            },
-            {
-              "score": 0.29,
-              "muscleType": "QuadricepsVastus",
-              "date": "2024-12-20T10:08:46.9760944Z"
-            }
-          ],
-          "pmcsAverage": 2,
-          "pmssAverage": 0,
-          "pmtsAverage": 5
+          pmss: null,
+          pmcsAverage: 47,
+          pmssAverage: 0
         },
-        "tags": [],
-        "note": null,
-        "injuryImageUrl": "https://hubfiles.aivisiontech.net/2024-11-12_12-23-42__carpal_injury_image.png",
-        "tirednessImageUrl": null,
-        "postureImageUrl": null,
-        "originalImageUrl": "https://aivisiontech-hub.s3.eu-central-1.amazonaws.com/storage/ddd36e30-986e-4b24-87b5-89be12740e88/96fce487-51af-4233-afa0-fb1097f27875",
-        "specificAnalyzeResults": [
-          "Analyzes 3",
-          "Analyzes 4",
-          "Analyzes 5"
-        ],
-        "postureAnalyze": [],
-        "createdOnUtc": "2024-11-12T12:23:42.687619Z"
+        tags: [],
+        note: null,
+        injuryImageUrl: 'https://hubfiles.aivisiontech.net/thermal/2024-11-12_20-56-24__upper_injury_image.png',
+        tirednessImageUrl: 'https://hubfiles.aivisiontech.net/thermal/2024-11-12_20-56-24__upper_fatique_image.png',
+        postureImageUrl: null,
+        originalImageUrl: 'https://hubfiles.aivisiontech.net/storage/a3df1c96-db93-4b57-be47-d850b5c5f5f2/50e8f6fa-3a72-4ae8-809f-b625aefc0b7d',
+        specificAnalyzeResults: null,
+        postureAnalyze: [],
+        createdOnUtc: '2024-11-12T20:56:24.621806Z'
       },
-      "error": null,
-      "isSuccess": true
+      error: null,
+      isSuccess: true
     }
   })
 

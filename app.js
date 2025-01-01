@@ -41,81 +41,50 @@ admin.initializeApp({
 let assistant;
 let vectorStore;
 
-(async () => {
-  try {
-    // Asistanı al veya oluştur
-    assistant = await getOrCreateAssistant();
+function generateUserMessage(language, sport, prompt, analyzeType) {
+  if (analyzeType === 'Carpal') {
+    return `Create a focused hand and wrist exercise risk assessment in ${language} and specifically for ${sport}.
 
-    // Vektör deposunu al veya oluştur
-    vectorStore = await getOrCreateVectorStore();
-
-    // Asistanı vektör deposuyla güncelle
-    await updateAssistantWithVectorStore(assistant, vectorStore);
-
-    // Sunucuyu başlat
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-    });
-  } catch (error) {
-    console.error('Error initializing assistant or vector store:', error);
+    STRUCTURE:
+    1. Title: Hand Exercise Assessment (Start with one hashtag # hierarchy)
+    
+    2. Overview section:
+       - One paragraph summarizing hand/wrist condition and key recommendations
+       
+    3. Main section for each affected finger/area:
+       ### [Area Name] ([Risk Level]) (with two hashtag ## hierarchy)
+       - Current status and specific risks
+       - Grip modifications needed
+       - Sport-specific technique adjustments
+       > Key monitoring points
+    
+    4. Grip and Hand Position Modifications
+       - Sport-specific grip adjustments
+       - Equipment modifications if needed
+    
+    KEY REQUIREMENTS:
+    - Provide clean markdown without code blocks
+    - Keep technical terms minimal
+    - Focus on sport-specific hand positions
+    - Give clear grip modification reasons
+    - Do not make headings in other languages than ${language}
+    - Include only affected areas from data
+    
+    IMPORTANT:
+    - Focus on hand position and grip recommendations
+    - Keep focus practical and forward-looking
+    - Emphasize proper hand positioning
+    
+    Data for analysis: ${prompt}`;
   }
-})();
-
-const db = admin.database();
-
-app.use(bodyParser.json());
-app.use(cors());
-
-function apiKeyMiddleware(req, res, next) {
-  const apiKey = req.params.apiAnahtari;
-  if (apiKey !== API_KEY) {
-    return res.status(403).json({ message: 'Geçersiz API anahtarı' });
-  }
-  next();
-}
-
-app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
-  const { language, data, sport } = req.body;
-
-  if (!language || !data) {
-    return res.status(400).json({ message: 'Geçersiz istek. Dil ve veri gereklidir.' });
-  }
-
-  const { prompt, id , analyzeType} = promptGenerator(data.value);
-
-  const ref = db.ref("analyses");
-  const analysisRef = ref.child(id);
-
-  try {
-    // Veritabanı kontrolü
-    const snapshot = await analysisRef.once('value');
-    if (snapshot.exists()) {
-      // Eğer analiz varsa, SSE formatında gönder ve bitir
-      res.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache',
-        'Connection': 'keep-alive',
-      });
-      const existingAnalysis = snapshot.val().analysis;
-      res.write(`data: ${JSON.stringify({ content: existingAnalysis })}\n\n`);
-      //res.write('data: [DONE]\n\n');
-      return res.end();
-    }
-
-    // SSE headers
-    res.writeHead(200, {
-      'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
-    });
-
-    const userMessage = `Create a focused exercise risk assessment in ${language} and spesificly this sport: ${sport}.
+  
+  return `Create a focused exercise risk assessment in ${language} and spesificly this sport: ${sport}.
 
     STRUCTURE:
     1. Title: Exercise Assessment (Start with one hashtag # hierarchy)
     
     2. Overview section:
-       - One paragraph summarizing all identified risks and key recommendations from the detailed sections below
+       - One paragraph summarizing all identified risks and key recommendations
        
     3. Main section for each affected muscle:
        ### [Muscle Name] ([High Risk Exercise]) (with two hashtag ## hierarchy)
@@ -146,14 +115,73 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
     - Start the report with one hashtag # hierarchy
     
     Data for analysis: ${prompt}`;
+}
 
+(async () => {
+  try {
+    // Asistanı al veya oluştur
+    // Sunucuyu başlat
+    app.listen(PORT, () => {
+      console.log(`Server is running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Error initializing assistant or vector store:', error);
+  }
+})();
 
+const db = admin.database();
+
+app.use(bodyParser.json());
+app.use(cors());
+
+function apiKeyMiddleware(req, res, next) {
+  const apiKey = req.params.apiAnahtari;
+  if (apiKey !== API_KEY) {
+    return res.status(403).json({ message: 'Geçersiz API anahtarı' });
+  }
+  next();
+}
+
+app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
+  const { language, data, sport } = req.body;
+
+  if (!language || !data) {
+    return res.status(400).json({ message: 'Geçersiz istek. Dil ve veri gereklidir.' });
+  }
+
+  const { prompt, id, analyzeType } = promptGenerator(data.value);
+
+  vectorStore = await getOrCreateVectorStore(analyzeType);
+  assistant = await getOrCreateAssistant(analyzeType);
+  await updateAssistantWithVectorStore(assistant, vectorStore);
+
+  const ref = db.ref("analyses");
+  const analysisRef = ref.child(id);
+
+  try {
+    const snapshot = await analysisRef.once('value');
+    if (snapshot.exists()) {
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      });
+      const existingAnalysis = snapshot.val().analysis;
+      res.write(`data: ${JSON.stringify({ content: existingAnalysis })}\n\n`);
+      return res.end();
+    }
+
+    res.writeHead(200, {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    });
+
+    const userMessage = generateUserMessage(language, sport, prompt, analyzeType);
     let fullResponse = '';
 
     console.log("UserMessage: ", userMessage);
 
-
-    // Thread ve run oluştur
     const thread = await openai.beta.threads.create();
     await openai.beta.threads.messages.create(thread.id, {
       role: "user",
@@ -176,7 +204,6 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
       stream: true
     });
 
-    // Stream'i işle ve gönder
     for await (const event of run) {
       if (event.event === "thread.message.delta") {
         const content = event.data.delta.content;
@@ -188,14 +215,11 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
       }
     }
 
-    // Veritabanına kaydet
     await analysisRef.set({
       analysis: fullResponse,
       timestamp: admin.database.ServerValue.TIMESTAMP
     });
 
-    // Stream'i sonlandır
-    //res.write('data: [DONE]\n\n');
     res.end();
 
   } catch (error) {

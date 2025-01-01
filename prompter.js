@@ -91,7 +91,7 @@ Sporcu Bilgileri: ${athlete.positions.join(', ')} pozisyonunda oynayan sporcu ${
 
 Analiz Sonucu: ${generateAnomalyReport(anamolies)}
 
-Not: Bu değerlendirme AI4Sports yapay zeka ve termografi ile sporcu sakatlık ve yorgunluk risk analizi sonucudur. Sakatlık riski seviyeleri (düşükten yükseğe): Normal, Should Observe, Should Protect, Attention, Urgent. Yorgunluk riski seviyeleri (düşükten yükseğe): Normal, Low, Average, High.`;
+1Not: Bu değerlendirme AI4Sportsssss yapay zeka ve termografi ile sporcu sakatlık ve yorgunluk risk analizi sonucudur. Sakatlık riski seviyeleri (düşükten yükseğe): Normal, Should Observe, Should Protect, Attention, Urgent. Yorgunluk riski seviyeleri (düşükten yükseğe): Normal, Low, Average, High.`;
 }
 
 function generateStandardPrompt(athlete, analyzeType, analyzeSideType, anamolies, relevantMuscles) {
