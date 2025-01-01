@@ -1,7 +1,5 @@
-const promptGenerator = require("./prompter")
 
-
-const data = {
+let input = JSON.stringify({
     "language": "Turkish",
     "sport": "Football",
     "data": {
@@ -540,7 +538,22 @@ const data = {
       "error": null,
       "isSuccess": true
     }
-  }
-const prompt = promptGenerator(data, 1)
+  })
 
-console.log(prompt);
+function fixJSONFormat(input) {
+    // Tırnak içermeyen anahtarları bulup çift tırnak ekleme
+    let formatted = input.replace(/([{,]\s*)([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+
+    // Tek tırnakları çift tırnaklara çevirme
+    formatted = formatted.replace(/'/g, '"');
+
+    try {
+        // Dönüşümü test etmek için JSON.parse uygulama
+        const parsedJSON = JSON.parse(formatted);
+        return JSON.stringify(parsedJSON, null, 2); // Formatlı çıktı
+    } catch (error) {
+        return `Geçersiz JSON formatı: ${error.message}`;
+    }
+}
+
+console.log(fixJSONFormat(input));

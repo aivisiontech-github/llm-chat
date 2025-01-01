@@ -81,7 +81,7 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
     return res.status(400).json({ message: 'Geçersiz istek. Dil ve veri gereklidir.' });
   }
 
-  const { prompt, id } = promptGenerator(data.value);
+  const { prompt, id , analyzeType} = promptGenerator(data.value);
 
   const ref = db.ref("analyses");
   const analysisRef = ref.child(id);
