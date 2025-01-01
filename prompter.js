@@ -87,11 +87,24 @@ function generateCarpalPrompt(athlete, analyzeType, analyzeSideType, anamolies, 
 
     return `El ${analyzeSideType} termal görüntüsü değerlendirilmiştir.
     
-Sporcu Bilgileri: ${athlete.positions.join(', ')} pozisyonunda oynayan sporcu ${formatDate(athlete.birthDate)} doğumlu ve ${athlete.gender}. Sporcunun dominant tarafı ${athlete.dominantSide}. Boy: ${athlete.bodySize.height} cm, Kilo: ${athlete.bodySize.weight} kg.
-
-Analiz Sonucu: ${generateAnomalyReport(anamolies)}
-
-1Not: Bu değerlendirme AI4Sportsssss yapay zeka ve termografi ile sporcu sakatlık ve yorgunluk risk analizi sonucudur. Sakatlık riski seviyeleri (düşükten yükseğe): Normal, Should Observe, Should Protect, Attention, Urgent. Yorgunluk riski seviyeleri (düşükten yükseğe): Normal, Low, Average, High.`;
+    Sporcu Bilgileri: ${athlete.positions.join(', ')} pozisyonunda oynayan sporcu ${formatDate(athlete.birthDate)} doğumlu ve ${athlete.gender}. Sporcunun dominant tarafı ${athlete.dominantSide}. Boy: ${athlete.bodySize.height} cm, Kilo: ${athlete.bodySize.weight} kg.
+    
+    Analiz Sonucu: ${generateAnomalyReport(anamolies)}
+    
+    Sen bir ortopedistsin. Yukarıdaki sporcunun analiz sonuçlarına göre:
+    
+    1. Önce sporcunun karpal tünel risk durumunu değerlendir ve bunu açıkla
+    2. Risk durumuna uygun olarak 4-6 haftalık bir egzersiz programı oluştur:
+       - Her egzersiz için set sayısı, tekrar sayısı ve dinlenme sürelerini belirt
+       - Her egzersizin hangi el fonksiyonlarını iyileştireceğini açıkla
+       - Program önerilerini ve dikkat edilecek noktaları listele
+    3. İlerleme takibi için önerilerde bulun
+    4. Üzerine düşünerek özgün egzersizler ver tekrara düşme
+    
+    Lütfen tüm bu bilgileri profesyonel bir dille ve organize şekilde sun.
+    
+    Not: Bu değerlendirme AI4Sports yapay zeka ve termografi ile sporcu sakatlık ve yorgunluk risk analizi sonucudur. Sakatlık riski seviyeleri (düşükten yükseğe): Normal, Should Observe, Should Protect, Attention, Urgent. Yorgunluk riski seviyeleri (düşükten yükseğe): Normal, Low, Average, High.`;
+    
 }
 
 function generateStandardPrompt(athlete, analyzeType, analyzeSideType, anamolies, relevantMuscles) {

@@ -43,41 +43,48 @@ let vectorStore;
 
 function generateUserMessage(language, sport, prompt, analyzeType) {
   if (analyzeType === 'Carpal') {
-    return `Create a focused hand and wrist exercise risk assessment in ${language} and specifically for ${sport}.
+    return `Create a comprehensive Carpal Tunnel Risk Assessment and Exercise Program in ${language} based on thermal analysis and specifically for ${sport}.
 
     STRUCTURE:
-    1. Title: Hand Exercise Assessment (Start with one hashtag # hierarchy)
+    1. Title: Carpal Tunnel Risk Assessment and Exercise Program (Start with one hashtag # hierarchy)
     
-    2. Overview section:
-       - One paragraph summarizing hand/wrist condition and key recommendations
+    2. Risk Assessment Overview:
+       - Current risk level based on thermal analysis
+       - Key findings and primary concerns
        
-    3. Main section for each affected finger/area:
-       ### [Area Name] ([Risk Level]) (with two hashtag ## hierarchy)
-       - Current status and specific risks
-       - Grip modifications needed
-       - Sport-specific technique adjustments
-       > Key monitoring points
+    3. Exercise Program (4-6 Weeks):
+       ### Exercise Categories (with two hashtag ## hierarchy)
+       - Flexibility Exercises
+       - Strengthening Exercises
+       - Neural Mobilization
+       > Each exercise should include:
+         * Sets and repetitions
+         * Rest periods
+         * Targeted benefits
+         * Proper form instructions
     
-    4. Grip and Hand Position Modifications
-       - Sport-specific grip adjustments
-       - Equipment modifications if needed
+    4. Implementation Guidelines:
+       - Daily routine recommendations
+       - Progress tracking methods
+       - Warning signs to monitor
+       - Sport-specific adaptations
     
     KEY REQUIREMENTS:
     - Provide clean markdown without code blocks
-    - Keep technical terms minimal
-    - Focus on sport-specific hand positions
-    - Give clear grip modification reasons
+    - Keep medical terms minimal and explained
+    - Focus on sport-specific hand movements
+    - Clear progression guidelines
     - Do not make headings in other languages than ${language}
-    - Include only affected areas from data
+    - Maintain professional but accessible language
     
     IMPORTANT:
-    - Focus on hand position and grip recommendations
-    - Keep focus practical and forward-looking
-    - Emphasize proper hand positioning
+    - Focus on preventive care and maintenance
+    - Include proper form emphasis
+    - Adapt to athlete's current condition
+    - Consider dominant hand factors
     
     Data for analysis: ${prompt}`;
-  }
-  
+}
   return `Create a focused exercise risk assessment in ${language} and spesificly this sport: ${sport}.
 
     STRUCTURE:
