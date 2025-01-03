@@ -8,28 +8,24 @@ require('dotenv').config();
 // OpenAI API anahtarınızı burada da dahil edin
 const openai = require('./openai'); // openai.js dosyasından içe aktarın
 
+const NORMAL_VECTOR_STORE_ID = 'vs_tYRGrhw3IFawWD2TayYfHvFp';
+const CARPAL_VECTOR_STORE_ID = "vs_YqC6CaLVXmFTeaURJq2wp4ey";
 
-// Mevcut vektör deposu kimliği
-const VECTOR_STORE_ID = 'vs_tYRGrhw3IFawWD2TayYfHvFp'; // Mevcut vektör deposu kimliği
+async function getOrCreateVectorStore(analyzeType) {
+  const VECTOR_STORE_ID = analyzeType === 'Carpal' ? CARPAL_VECTOR_STORE_ID : NORMAL_VECTOR_STORE_ID;
 
-// Vektör deposu oluşturma veya mevcut olanı alma
-async function getOrCreateVectorStore() {
-  if (VECTOR_STORE_ID) {
-    // Mevcut vektör deposunu alın
-    try {
-      const vectorStore = await openai.beta.vectorStores.retrieve(VECTOR_STORE_ID);
-      console.log('Mevcut vektör deposu kullanılıyor:', vectorStore.id);
-      return vectorStore;
-    } catch (error) {
-      console.error('Mevcut vektör deposu alınamadı, yeni bir vektör deposu oluşturuluyor...');
-    }
+  try {
+    const vectorStore = await openai.beta.vectorStores.retrieve(VECTOR_STORE_ID);
+    console.log('Mevcut vektör deposu kullanılıyor:', vectorStore.id);
+    return vectorStore;
+  } catch (error) {
+    console.error('Mevcut vektör deposu alınamadı, yeni bir vektör deposu oluşturuluyor...');
+    const vectorStore = await openai.beta.vectorStores.create({
+      name: analyzeType === 'Carpal' ? 'El Sağlık Belgeleri' : 'Sağlık Belgeleri',
+    });
+    console.log('Yeni vektör deposu oluşturuldu:', vectorStore.id);
+    return vectorStore;
   }
-  // Yeni bir vektör deposu oluşturun
-  const vectorStore = await openai.beta.vectorStores.create({
-    name: 'Sağlık Belgeleri',
-  });
-  console.log('Yeni vektör deposu oluşturuldu:', vectorStore.id);
-  return vectorStore;
 }
 
 // Vektör deposuna dosyalar ekleme
