@@ -11,6 +11,11 @@ const CARPAL_VECTOR_STORE_ID = "vs_YqC6CaLVXmFTeaURJq2wp4ey";
 const NORMAL_ASSISTANT_ID = 'asst_8lkR4QgTlBidzFznrX7Ui0We';
 const CARPAL_ASSISTANT_ID = 'asst_ZSV8TYJxnCIl6ymT254x6OOl';
 
+// MongoDB Bağlantı Bilgileri
+const MONGODB_URI = 'mongodb+srv://aybarsayan:1071Aa1071@ai4sportsuser.yvecp.mongodb.net/test?retryWrites=true&w=majority';
+const MONGODB_DB = 'test';
+const MONGODB_COLLECTION = 'messages';
+
 // Asistan Talimatları
 const NORMAL_ASSISTANT_INSTRUCTIONS = `You are a specialized sports physiotherapist and athletic performance coach utilizing thermal data to assess fatigue and injury risk parameters. Based on thermography-identified fatigue and injuries risk levels, provide recommendations on which exercises athletes should avoid. Additionally, occasionally suggest alternative exercises or preventive practices to mitigate these risks. Your output should be concise, avoiding lengthy general information and focusing on specific situations. Work in conjunction with a file search system, addressing only reported problematic muscle groups and offering recommendations specific to these areas.
 
@@ -142,5 +147,8 @@ module.exports = {
     NORMAL_ASSISTANT_INSTRUCTIONS,
     CARPAL_ASSISTANT_INSTRUCTIONS,
     normalPromptTemplate,
-    carpalPromptTemplate
+    carpalPromptTemplate,
+    MONGODB_URI,
+    MONGODB_DB,
+    MONGODB_COLLECTION
 };

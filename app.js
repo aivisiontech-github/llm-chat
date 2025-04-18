@@ -2,7 +2,6 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const axios = require('axios')
 const dotenv = require('dotenv')
-const admin = require('firebase-admin')
 const cors = require('cors')
 
 // OpenAI API anahtarınızı burada da dahil edin
@@ -28,20 +27,19 @@ const {
 	updateAssistantWithVectorStore,
 } = require('./utils/vectorstore')
 
+// MongoDB fonksiyonlarını içe aktar
+const {
+	connectToDatabase,
+	saveAnalysis,
+	getAnalysisById
+} = require('./utils/mongodb')
+
 const promptGenerator = require('./prompter')
 
 dotenv.config() // Bu satır en üstte olmalı, ardından process.env kullanabilirsiniz.
 
 const app = express()
 const PORT = process.env.PORT || 3000
-
-// Firebase Admin SDK'yı başlatma
-const serviceAccount = require('./database.json')
-
-admin.initializeApp({
-	credential: admin.credential.cert(serviceAccount),
-	databaseURL: 'https://ai4sports-analysis-default-rtdb.firebaseio.com',
-})
 
 let assistant
 let vectorStore
@@ -59,17 +57,18 @@ function generateUserMessage(language, sport, prompt, analyzeType) {
 
 ;(async () => {
 	try {
-		// Asistanı al veya oluştur
+		// MongoDB bağlantısını başlat
+		await connectToDatabase();
+		console.log('MongoDB bağlantısı başarılı');
+		
 		// Sunucuyu başlat
 		app.listen(PORT, () => {
 			console.log(`Server is running on port ${PORT}`)
 		})
 	} catch (error) {
-		console.error('Error initializing assistant or vector store:', error)
+		console.error('Error initializing connection:', error)
 	}
 })()
-
-const db = admin.database()
 
 app.use(bodyParser.json())
 app.use(cors())
@@ -97,19 +96,17 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
 	assistant = await getOrCreateAssistant(analyzeType)
 	await updateAssistantWithVectorStore(assistant, vectorStore)
 
-	const ref = db.ref('analyses')
-	const analysisRef = ref.child(id)
-
 	try {
-		const snapshot = await analysisRef.once('value')
-		if (snapshot.exists()) {
+		// MongoDB'den mevcut analizi kontrol et
+		const existingAnalysis = await getAnalysisById(id);
+		
+		if (existingAnalysis) {
 			res.writeHead(200, {
 				'Content-Type': 'text/event-stream',
 				'Cache-Control': 'no-cache',
 				Connection: 'keep-alive',
 			})
-			const existingAnalysis = snapshot.val().analysis
-			res.write(`data: ${JSON.stringify({ content: existingAnalysis })}\n\n`)
+			res.write(`data: ${JSON.stringify({ content: existingAnalysis.analysis })}\n\n`)
 			return res.end()
 		}
 
@@ -164,10 +161,8 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
 			}
 		}
 
-		await analysisRef.set({
-			analysis: fullResponse,
-			timestamp: admin.database.ServerValue.TIMESTAMP,
-		})
+		// MongoDB'ye analiz sonucunu kaydet
+		await saveAnalysis(id, fullResponse);
 
 		res.end()
 	} catch (error) {
@@ -175,9 +170,4 @@ app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
 		res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`)
 		res.end()
 	}
-})
-
-// Tekrar app.listen çağrısına gerek yok, yukarıda zaten var
-// app.listen(PORT, () => {
-//   console.log(`Server is running on port ${PORT}`);
-// });
+});
