@@ -7,13 +7,18 @@ require('dotenv').config()
 
 // OpenAI API anahtarınızı burada da dahil edin
 const openai = require('./openai') // openai.js dosyasından içe aktarın
-
-const Normal_ASSISTANT_ID = 'asst_8lkR4QgTlBidzFznrX7Ui0We'
-const Carpal_ASSISTANT_ID = 'asst_ZSV8TYJxnCIl6ymT254x6OOl'
+const { 
+	NORMAL_ASSISTANT_ID, 
+	CARPAL_ASSISTANT_ID,
+	NORMAL_ASSISTANT_INSTRUCTIONS,
+	CARPAL_ASSISTANT_INSTRUCTIONS
+} = require('./consts')
 
 async function getOrCreateAssistant(analyzeType) {
 	const ASSISTANT_ID =
-		analyzeType === 'Carpal' ? Carpal_ASSISTANT_ID : Normal_ASSISTANT_ID
+		analyzeType === 'Carpal' ? CARPAL_ASSISTANT_ID : NORMAL_ASSISTANT_ID
+	const INSTRUCTIONS = 
+		analyzeType === 'Carpal' ? CARPAL_ASSISTANT_INSTRUCTIONS : NORMAL_ASSISTANT_INSTRUCTIONS
 
 	try {
 		const assistant = await openai.beta.assistants.retrieve(ASSISTANT_ID)
@@ -26,25 +31,7 @@ async function getOrCreateAssistant(analyzeType) {
 				analyzeType === 'Carpal'
 					? 'El Sağlığı Analist Asistanı'
 					: 'Sağlık Analist Asistanı',
-			instructions: `You are a specialized sports physiotherapist and athletic performance coach utilizing thermal data to assess fatigue and injury risk parameters. Based on thermography-identified fatigue and injuries risk levels, provide recommendations on which exercises athletes should avoid. Additionally, occasionally suggest alternative exercises or preventive practices to mitigate these risks. Your output should be concise, avoiding lengthy general information and focusing on specific situations. Work in conjunction with a file search system, addressing only reported problematic muscle groups and offering recommendations specific to these areas.
-
-# Steps
-
-1. Analyze thermography data to assess fatigue and injury risk.
-2. Focus exclusively on problematic muscle groups reported to you.
-3. Determine exercises to avoid based on identified risks.
-4. Suggest alternative exercises or preventive practices sparingly when beneficial.
-5. Ensure conclusions are concise and situation-specific.
-
-# Output Format
-
-Responses should be succinct and directly address the identified muscle issues and recommended exercise modifications.
-
-# Notes
-
-- Prioritize specific and reported issues over general advice.
-- Consider the file search system in identifying problematic areas.
-- Ensure that advice remains concise and relevant to the specific athlete's situation.`,
+			instructions: INSTRUCTIONS,
 			model: 'gpt-4o',
 			tools: [{ type: 'file_search' }],
 		})

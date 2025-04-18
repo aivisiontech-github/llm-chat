@@ -8,6 +8,13 @@ const cors = require('cors')
 // OpenAI API anahtarınızı burada da dahil edin
 const openai = require('./utils/openai') // openai.js dosyasından içe aktarın
 
+// Sabitleri içe aktar
+const {
+	API_KEY,
+	normalPromptTemplate,
+	carpalPromptTemplate
+} = require('./utils/consts')
+
 // Fonksiyonları içe aktar
 const {
 	getOrCreateAssistant,
@@ -28,8 +35,6 @@ dotenv.config() // Bu satır en üstte olmalı, ardından process.env kullanabil
 const app = express()
 const PORT = process.env.PORT || 3000
 
-const API_KEY = 'test'
-
 // Firebase Admin SDK'yı başlatma
 const serviceAccount = require('./database.json')
 
@@ -43,85 +48,13 @@ let vectorStore
 
 function generateUserMessage(language, sport, prompt, analyzeType) {
 	if (analyzeType === 'Carpal') {
-		return `Create a comprehensive Carpal Tunnel Risk Assessment and Exercise Program in ${language} based on thermal analysis and specifically for ${sport}.
-
-    STRUCTURE:
-    1. Title: Carpal Tunnel Risk Assessment and Exercise Program (Start with one hashtag # hierarchy)
-    
-    2. Risk Assessment Overview:
-       - Current risk level based on thermal analysis
-       - Key findings and primary concerns
-       
-    3. Exercise Program (4-6 Weeks):
-       ### Exercise Categories (with two hashtag ## hierarchy)
-       - Flexibility Exercises
-       - Strengthening Exercises
-       - Neural Mobilization
-       > Each exercise should include:
-         * Sets and repetitions
-         * Rest periods
-         * Targeted benefits
-         * Proper form instructions
-    
-    4. Implementation Guidelines:
-       - Daily routine recommendations
-       - Progress tracking methods
-       - Warning signs to monitor
-       - Sport-specific adaptations
-    
-    KEY REQUIREMENTS:
-    - Provide clean markdown without code blocks
-    - Keep medical terms minimal and explained
-    - Focus on sport-specific hand movements
-    - Clear progression guidelines
-    - Do not make headings in other languages than ${language}
-    - Maintain professional but accessible language
-    
-    IMPORTANT:
-    - Focus on preventive care and maintenance
-    - Include proper form emphasis
-    - Adapt to athlete's current condition
-    - Consider dominant hand factors
-    
-    Data for analysis: ${prompt}`
+		return carpalPromptTemplate.replace('{language}', language)
+			.replace('{sport}', sport)
+			.replace('{prompt}', prompt);
 	}
-	return `Create a focused exercise risk assessment in ${language} and spesificly this sport: ${sport}.
-
-    STRUCTURE:
-    1. Title: Exercise Assessment (Start with one hashtag # hierarchy)
-    
-    2. Overview section:
-       - One paragraph summarizing all identified risks and key recommendations
-       
-    3. Main section for each affected muscle:
-       ### [Muscle Name] ([High Risk Exercise]) (with two hashtag ## hierarchy)
-       - Detailed explanation (2-3 sentences):
-         • Specific injury risks and mechanisms
-         • Potential complications
-         • Direct connection to current condition
-       - One precise alternative exercise with implementation details
-       > Critical warning signs to monitor
-    
-    4. Training Modifications section by exercise type
-    
-    KEY REQUIREMENTS:
-    - Provide clean markdown output without code blocks
-    - Keep technical terminology minimal
-    - Ensure overview accurately summarizes all detailed sections
-    - Focus on practical, forward-looking recommendations
-    - Give clear reasoning for each exercise restriction
-    - Do not make the headings in other languages other than ${language}
-    - Provide one specific, detailed alternative per muscle
-    - Include only affected muscles from data
-    
-    IMPORTANT:
-    - Do not mention analysis methods or data sources in the output
-    - Keep focus on recommendations and risks, not diagnostics
-    - Avoid technical jargon when possible
-    - Make sure overview connects with detailed sections
-    - Start the report with one hashtag # hierarchy
-    
-    Data for analysis: ${prompt}`
+	return normalPromptTemplate.replace('{language}', language)
+		.replace('{sport}', sport)
+		.replace('{prompt}', prompt);
 }
 
 ;(async () => {
