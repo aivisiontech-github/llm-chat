@@ -7,18 +7,13 @@ require('dotenv').config()
 
 // OpenAI API anahtarınızı burada da dahil edin
 const openai = require('./openai') // openai.js dosyasından içe aktarın
-const { 
-	NORMAL_ASSISTANT_ID, 
-	CARPAL_ASSISTANT_ID,
-	NORMAL_ASSISTANT_INSTRUCTIONS,
-	CARPAL_ASSISTANT_INSTRUCTIONS
-} = require('./consts')
+const config = require('./consts')
 
 async function getOrCreateAssistant(analyzeType) {
 	const ASSISTANT_ID =
-		analyzeType === 'Carpal' ? CARPAL_ASSISTANT_ID : NORMAL_ASSISTANT_ID
+		analyzeType === 'Carpal' ? config.ASSISTANTS.CARPAL : config.ASSISTANTS.NORMAL
 	const INSTRUCTIONS = 
-		analyzeType === 'Carpal' ? CARPAL_ASSISTANT_INSTRUCTIONS : NORMAL_ASSISTANT_INSTRUCTIONS
+		analyzeType === 'Carpal' ? config.INSTRUCTIONS.CARPAL : config.INSTRUCTIONS.NORMAL
 
 	try {
 		const assistant = await openai.beta.assistants.retrieve(ASSISTANT_ID)

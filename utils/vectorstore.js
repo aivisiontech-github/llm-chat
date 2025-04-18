@@ -7,10 +7,12 @@ require('dotenv').config();
 
 // OpenAI API anahtarınızı burada da dahil edin
 const openai = require('./openai'); // openai.js dosyasından içe aktarın
-const { NORMAL_VECTOR_STORE_ID, CARPAL_VECTOR_STORE_ID } = require('./consts');
+const config = require('./consts');
 
 async function getOrCreateVectorStore(analyzeType) {
-  const VECTOR_STORE_ID = analyzeType === 'Carpal' ? CARPAL_VECTOR_STORE_ID : NORMAL_VECTOR_STORE_ID;
+  const VECTOR_STORE_ID = analyzeType === 'Carpal' 
+    ? config.VECTOR_STORES.CARPAL 
+    : config.VECTOR_STORES.NORMAL;
 
   try {
     const vectorStore = await openai.beta.vectorStores.retrieve(VECTOR_STORE_ID);
