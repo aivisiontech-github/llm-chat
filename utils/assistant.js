@@ -10,24 +10,61 @@ const openai = require('./openai') // openai.js dosyasından içe aktarın
 const config = require('./consts')
 
 async function getOrCreateAssistant(analyzeType) {
+	console.log(`getOrCreateAssistant çağrıldı - analyzeType: ${analyzeType}`);
+	console.log(`Mevcut asistan tipleri: ${JSON.stringify(config.ASSISTANTS.map(asst => asst.type))}`);
+	
+	// Direkt olarak config içeriğini kontrol edelim
+	const configAssistants = config.ASSISTANTS || [];
+	console.log(`Config'den gelen asistan sayısı: ${configAssistants.length}`);
+	configAssistants.forEach((asst, index) => {
+		console.log(`Config'den gelen Asistan ${index + 1} - Tip: ${asst.type}, ID: ${asst.assistant_id}`);
+	});
+	
 	// Asistan konfigürasyonunu array içinden bulalım
-	const assistantConfig = config.ASSISTANTS.find(asst => asst.type === analyzeType)
+	const assistantConfig = config.ASSISTANTS.find(asst => asst.type === analyzeType);
+	console.log(`${analyzeType} için asistan konfigürasyonu bulundu mu?: ${assistantConfig ? 'Evet' : 'Hayır'}`);
+	
 	if (!assistantConfig) {
-		throw new Error(`${analyzeType} için asistan konfigürasyonu bulunamadı`)
+		console.error(`${analyzeType} için asistan konfigürasyonu bulunamadı. Eşleşme yapılamadı.`);
+		console.log(`Tüm asistanların eşitlik kontrolü:`);
+		config.ASSISTANTS.forEach((asst, index) => {
+			console.log(`Asistan ${index + 1} - Tip: ${asst.type}, Eşleşme: ${asst.type === analyzeType}, Tam karşılaştırma: "${asst.type}" === "${analyzeType}"`);
+			console.log(`Tip türü: ${typeof asst.type}, analyzeType türü: ${typeof analyzeType}`);
+		});
+		
+		throw new Error(`${analyzeType} için asistan konfigürasyonu bulunamadı. Lütfen utils/consts.js dosyasında bu analiz tipi için bir konfigürasyon ekleyin.`)
 	}
 
+	console.log(`Asistan konfigürasyonu bulundu: Tip=${assistantConfig.type}, ID=${assistantConfig.assistant_id}`);
+
 	try {
+		console.log(`${analyzeType} için asistan sorgulanıyor: ${assistantConfig.assistant_id}`);
 		const assistant = await openai.beta.assistants.retrieve(assistantConfig.assistant_id)
-		console.log('Mevcut asistan kullanılıyor:', assistant.id)
+		console.log(`${analyzeType} için mevcut asistan kullanılıyor:`, assistant.id)
 		return assistant
 	} catch (error) {
-		console.error('Mevcut asistan alınamadı, yeni bir asistan oluşturuluyor...')
-		return await openai.beta.assistants.create({
-			name: assistantConfig.name,
-			instructions: assistantConfig.instructions,
-			model: 'gpt-4o',
-			tools: [{ type: 'file_search' }],
-		})
+		console.error(`${analyzeType} için mevcut asistan alınamadı (${assistantConfig.assistant_id}), yeni bir asistan oluşturuluyor...`)
+		console.error(`Hata detayları:`, error);
+		try {
+			console.log(`${analyzeType} için yeni asistan oluşturuluyor...`);
+			console.log(`Parametreler: Tip=${assistantConfig.type}, Ad=${assistantConfig.name}`);
+			console.log(`Talimatlar uzunluğu: ${assistantConfig.instructions?.length || 0} karakter`);
+			
+			const newAssistant = await openai.beta.assistants.create({
+				name: assistantConfig.name,
+				instructions: assistantConfig.instructions,
+				model: 'gpt-4o',
+				tools: [{ type: 'file_search' }],
+			})
+			console.log(`${analyzeType} için yeni asistan oluşturuldu:`, newAssistant.id)
+			// Burada normalde config'i güncellemek isteyebilirsiniz, ancak şu an için bunu yapamıyoruz
+			return newAssistant
+		} catch (createError) {
+			console.error(`${analyzeType} için asistan oluşturulurken hata:`, createError)
+			console.error(`Hata detayları:`, createError.toString());
+			console.error(`Hata yığını:`, createError.stack);
+			throw new Error(`${analyzeType} için asistan oluşturulamadı: ${createError.message}`)
+		}
 	}
 }
 // Yeni Thread ve Run oluşturma (Stream ve File Search ile)
@@ -83,6 +120,7 @@ async function createThreadAndRunWithFileSearch(
 		return { threadId: thread.id, runId: run.id, response: fullResponse }
 	} catch (error) {
 		console.error('An error occurred:', error)
+		throw error
 	}
 }
 
