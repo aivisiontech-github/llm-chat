@@ -10,50 +10,30 @@ const openai = require('./openai'); // openai.js dosyasından içe aktarın
 const config = require('./consts');
 
 async function getOrCreateVectorStore(analyzeType) {
-  console.log(`getOrCreateVectorStore çağrıldı - analyzeType: ${analyzeType}`);
-  console.log(`Mevcut asistan tipleri: ${JSON.stringify(config.ASSISTANTS.map(asst => asst.type))}`);
-  
-  // Direkt olarak config içeriğini kontrol edelim
-  const configAssistants = config.ASSISTANTS || [];
-  console.log(`Config'den gelen asistan sayısı: ${configAssistants.length}`);
-  configAssistants.forEach((asst, index) => {
-    console.log(`Config'den gelen Asistan ${index + 1} - Tip: ${asst.type}, ID: ${asst.assistant_id}, VectorStore ID: ${asst.vector_store_id}`);
-  });
+  console.log(`getOrCreateVectorStore - analyzeType: ${analyzeType}`);
   
   // Asistan konfigürasyonunu array içinden bulalım
   const assistantConfig = config.ASSISTANTS.find(asst => asst.type === analyzeType);
-  console.log(`${analyzeType} için asistan konfigürasyonu bulundu mu?: ${assistantConfig ? 'Evet' : 'Hayır'}`);
   
   if (!assistantConfig) {
     console.error(`${analyzeType} için asistan konfigürasyonu bulunamadı. Eşleşme yapılamadı.`);
-    console.log(`Tüm asistanların eşitlik kontrolü:`);
-    config.ASSISTANTS.forEach((asst, index) => {
-      console.log(`Asistan ${index + 1} - Tip: ${asst.type}, Eşleşme: ${asst.type === analyzeType}, Tam karşılaştırma: "${asst.type}" === "${analyzeType}"`);
-      console.log(`Tip türü: ${typeof asst.type}, analyzeType türü: ${typeof analyzeType}`);
-    });
-    
     throw new Error(`${analyzeType} için asistan konfigürasyonu bulunamadı. Lütfen utils/consts.js dosyasında bu analiz tipi için bir konfigürasyon ekleyin.`);
   }
 
-  console.log(`Asistan konfigürasyonu bulundu: Tip=${assistantConfig.type}, VectorStore ID=${assistantConfig.vector_store_id}`);
-
   try {
-    console.log(`${analyzeType} için vektör deposu sorgulanıyor: ${assistantConfig.vector_store_id}`);
     const vectorStore = await openai.beta.vectorStores.retrieve(assistantConfig.vector_store_id);
-    console.log(`${analyzeType} için mevcut vektör deposu kullanılıyor:`, vectorStore.id);
+    console.log(`${analyzeType} için mevcut vektör deposu: ${vectorStore.id}`);
     return vectorStore;
   } catch (error) {
-    console.error(`${analyzeType} için mevcut vektör deposu alınamadı (${assistantConfig.vector_store_id}), yeni bir vektör deposu oluşturuluyor...`);
-    console.error(`Hata detayları:`, error);
+    console.error(`${analyzeType} için mevcut vektör deposu alınamadı, yeni oluşturuluyor...`);
     try {
       const vectorStore = await openai.beta.vectorStores.create({
         name: assistantConfig.name + ' Belgeleri',
       });
-      console.log(`${analyzeType} için yeni vektör deposu oluşturuldu:`, vectorStore.id);
-      // Burada normalde config'i güncellemek isteyebilirsiniz, ancak şu an için bunu yapamıyoruz
+      console.log(`${analyzeType} için yeni vektör deposu: ${vectorStore.id}`);
       return vectorStore;
     } catch (createError) {
-      console.error(`${analyzeType} için vektör deposu oluşturulurken hata:`, createError);
+      console.error(`${analyzeType} için vektör deposu oluşturulurken hata:`, createError.message);
       throw new Error(`${analyzeType} için vektör deposu oluşturulamadı: ${createError.message}`);
     }
   }
@@ -62,6 +42,7 @@ async function getOrCreateVectorStore(analyzeType) {
 // Vektör deposuna dosyalar ekleme
 async function addFilesToVectorStore(vectorStore, filePaths) {
   try {
+    console.log(`addFilesToVectorStore - ${filePaths.length} dosya yükleniyor...`);
     const fileStreams = filePaths.map((path) => fs.createReadStream(path));
 
     // Dosyaların varlığını kontrol edin
@@ -78,7 +59,7 @@ async function addFilesToVectorStore(vectorStore, filePaths) {
 
     console.log('Dosyalar vektör deposuna yüklendi.');
   } catch (error) {
-    console.error('Dosyalar vektör deposuna yüklenirken hata:', error);
+    console.error('Dosyalar vektör deposuna yüklenirken hata:', error.message);
     throw error;
   }
 }
@@ -86,6 +67,7 @@ async function addFilesToVectorStore(vectorStore, filePaths) {
 // Klasörden dosyaları vektör deposuna ekleme
 async function addFilesFromFolderToVectorStore(vectorStore, folderPath) {
   try {
+    console.log(`addFilesFromFolderToVectorStore - Klasör: ${folderPath}`);
     // Klasördeki tüm dosya ve klasörlerin isimlerini al
     const fileNames = fs.readdirSync(folderPath);
 
@@ -98,6 +80,7 @@ async function addFilesFromFolderToVectorStore(vectorStore, folderPath) {
       throw new Error('Belirtilen klasörde yüklenebilecek dosya bulunamadı.');
     }
 
+    console.log(`${filePaths.length} dosya bulundu.`);
     // Dosyaların varlığını kontrol edin ve dosya akışlarını oluşturun
     const fileStreams = filePaths.map((filePath) => {
       if (!fs.existsSync(filePath)) {
@@ -113,7 +96,7 @@ async function addFilesFromFolderToVectorStore(vectorStore, folderPath) {
 
     console.log('Klasördeki dosyalar vektör deposuna yüklendi.');
   } catch (error) {
-    console.error('Klasördeki dosyalar vektör deposuna yüklenirken hata:', error);
+    console.error('Klasördeki dosyalar vektör deposuna yüklenirken hata:', error.message);
     throw error;
   }
 }
@@ -124,9 +107,9 @@ async function updateAssistantWithVectorStore(assistant, vectorStore) {
     await openai.beta.assistants.update(assistant.id, {
       tool_resources: { file_search: { vector_store_ids: [vectorStore.id] } },
     });
-    console.log(`Asistan (${assistant.id}) güncellendi ve vektör deposu (${vectorStore.id}) eklendi.`);
+    console.log(`Asistan (${assistant.id}) vektör deposu (${vectorStore.id}) ile güncellendi.`);
   } catch (error) {
-    console.error('Asistan vektör deposuyla güncellenirken hata:', error);
+    console.error('Asistan vektör deposuyla güncellenirken hata:', error.message);
     throw error;
   }
 }

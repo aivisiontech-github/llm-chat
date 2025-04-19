@@ -92,7 +92,9 @@ app.post('/analiz/:apiAnahtari', async (req, res) => {
 	try {
 		// Her sorgu için MongoDB'den yapılandırmayı yeniden yükle
 		console.log('MongoDB\'den yapılandırma yükleniyor...');
-		const config = await loadConfigFromMongoDB(false); // Önbelleği kullanma, her zaman yeni veri al
+		// MongoDB'den yapılandırmayı her istekte yeniden yüklemek yerine, cache kullanarak yükleyelim
+		// İlk seferde false ile çağırıp güncel veriyi alalım, sonraki isteklerde önbellekteki veriyi kullanabiliriz
+		const config = await loadConfigFromMongoDB(true); // Önbelleği kullan
 		console.log(`Yapılandırma yüklendi. Mevcut asistan tipleri: ${JSON.stringify(config.ASSISTANTS.map(a => a.type))}`);
 		
 		// API anahtarını doğrula
@@ -105,7 +107,8 @@ app.post('/analiz/:apiAnahtari', async (req, res) => {
 
 		const { language, data, sport } = req.body;
 		console.log(`İstek: Dil=${language}, Spor=${sport}`);
-		console.log(`Raw data: ${JSON.stringify(data).substring(0, 200)}...`);
+		// Çok uzun log çıktısını kısaltalım
+		console.log(`Data tipi ve ID: ${data.value?.analyzeType}, ${data.value?.id}`);
 
 		if (!language || !data) {
 			console.error('Eksik veri: Dil veya veri eksik');
@@ -121,62 +124,12 @@ app.post('/analiz/:apiAnahtari', async (req, res) => {
 		// analyzeType değerini büyük harfe çevirerek asistan yapısındaki type ile eşleştir
 		const assistantType = analyzeType.toUpperCase();
 		console.log(`Asistan tipi (büyük harfle): ${assistantType}`);
-		console.log(`Eşleşme yapılacak mevcut asistanlar: ${JSON.stringify(config.ASSISTANTS.map(a => a.type))}`);
 		
-		// config.ASSISTANTS içinde asistanın olup olmadığını kontrol et
-		const assistantExists = config.ASSISTANTS.some(asst => asst.type === assistantType);
-		console.log(`${assistantType} asistanı yapılandırmada mevcut mu? ${assistantExists ? 'Evet' : 'Hayır'}`);
-		
-		if (!assistantExists) {
-			console.warn(`${assistantType} için yapılandırmada bir asistan bulunamadı. Bu hatayla karşılaşılacak.`);
-		}
-		
-		// Utils/consts.js'den gelen asistan ve utils/config'ten gelen asistan aynı mı?
-		const constsConfig = require('./utils/consts');
-		console.log(`consts.js'den gelen asistan tipleri: ${JSON.stringify(constsConfig.ASSISTANTS.map(a => a.type))}`);
-		console.log(`İki konfigürasyon karşılaştırması:`);
-		console.log(`Yüklenen yapılandırmada ${assistantType} mevcut mu?: ${config.ASSISTANTS.some(a => a.type === assistantType) ? 'Evet' : 'Hayır'}`);
-		console.log(`consts.js'de ${assistantType} mevcut mu?: ${constsConfig.ASSISTANTS.some(a => a.type === assistantType) ? 'Evet' : 'Hayır'}`);
-		
-		// Eğer bu analiz tipi için bir asistan varsa kullan, yoksa kontrolü yapma
-		try {
-			console.log(`${assistantType} için asistan ve vektör deposu alınıyor...`);
-			const asistanKonfig = config.ASSISTANTS.find(asst => asst.type === assistantType);
-			console.log(`Asistan konfigürasyonu bulundu mu?: ${asistanKonfig ? 'Evet' : 'Hayır'}`);
-			if (asistanKonfig) {
-				console.log(`Bulunan asistan: Tip=${asistanKonfig.type}, ID=${asistanKonfig.assistant_id}, VectorStore=${asistanKonfig.vector_store_id}`);
-			} else {
-				console.warn(`${assistantType} için yapılandırmada asistan bulunamadı!`);
-			}
-			
-			vectorStore = await getOrCreateVectorStore(assistantType);
-			console.log(`Vektör deposu alındı: ${vectorStore.id}`);
-			
-			assistant = await getOrCreateAssistant(assistantType);
-			console.log(`Asistan alındı: ${assistant.id}`);
-			
-			await updateAssistantWithVectorStore(assistant, vectorStore);
-			console.log(`Asistan vektör deposu ile güncellendi`);
-		} catch (error) {
-			console.warn(`${assistantType} için asistan bulunamadı, varsayılan olarak NORMAL kullanılıyor:`, error.message);
-			console.log(`Hata detayları:`, error);
-			console.log(`Hata yığını:`, error.stack);
-			
-			console.log(`NORMAL tipi için asistan ve vektör deposu alınıyor...`);
-			vectorStore = await getOrCreateVectorStore('NORMAL');
-			console.log(`NORMAL vektör deposu alındı: ${vectorStore.id}`);
-			
-			assistant = await getOrCreateAssistant('NORMAL');
-			console.log(`NORMAL asistan alındı: ${assistant.id}`);
-			
-			await updateAssistantWithVectorStore(assistant, vectorStore);
-			console.log(`NORMAL asistan vektör deposu ile güncellendi`);
-		}
-
 		// MongoDB'den mevcut analizi kontrol et
 		console.log(`MongoDB'den ID=${id} için mevcut analiz kontrol ediliyor...`);
 		const existingAnalysis = await getAnalysisById(id);
 		
+		// Önce mevcut analiz kontrolü yapalım, böylece eğer varsa gereksiz asistan yükleme gibi işlemler yapmayalım
 		if (existingAnalysis) {
 			console.log(`Mevcut analiz bulundu, doğrudan dönülüyor: ID=${id}`);
 			res.writeHead(200, {
@@ -188,6 +141,40 @@ app.post('/analiz/:apiAnahtari', async (req, res) => {
 			return res.end();
 		}
 		console.log(`Mevcut analiz bulunamadı, yeni analiz yapılacak`);
+		
+		// Asistanın yapılandırmada mevcut olup olmadığını kontrol et
+		const assistantConfig = config.ASSISTANTS.find(asst => asst.type === assistantType);
+		if (!assistantConfig) {
+			console.warn(`${assistantType} için yapılandırmada bir asistan bulunamadı. NORMAL tip kullanılacak.`);
+		} else {
+			console.log(`Asistan konfigürasyonu bulundu: Tip=${assistantConfig.type}, ID=${assistantConfig.assistant_id}, VectorStore=${assistantConfig.vector_store_id}`);
+		}
+		
+		// Asistan ve vektör deposunu yükle
+		try {
+			console.log(`${assistantType} için asistan ve vektör deposu alınıyor...`);
+			
+			vectorStore = await getOrCreateVectorStore(assistantType);
+			console.log(`Vektör deposu alındı: ${vectorStore.id}`);
+			
+			assistant = await getOrCreateAssistant(assistantType);
+			console.log(`Asistan alındı: ${assistant.id}`);
+			
+			await updateAssistantWithVectorStore(assistant, vectorStore);
+			console.log(`Asistan vektör deposu ile güncellendi`);
+		} catch (error) {
+			console.warn(`${assistantType} için asistan bulunamadı, varsayılan olarak NORMAL kullanılıyor:`, error.message);
+			
+			console.log(`NORMAL tipi için asistan ve vektör deposu alınıyor...`);
+			vectorStore = await getOrCreateVectorStore('NORMAL');
+			console.log(`NORMAL vektör deposu alındı: ${vectorStore.id}`);
+			
+			assistant = await getOrCreateAssistant('NORMAL');
+			console.log(`NORMAL asistan alındı: ${assistant.id}`);
+			
+			await updateAssistantWithVectorStore(assistant, vectorStore);
+			console.log(`NORMAL asistan vektör deposu ile güncellendi`);
+		}
 
 		res.writeHead(200, {
 			'Content-Type': 'text/event-stream',
@@ -203,7 +190,6 @@ app.post('/analiz/:apiAnahtari', async (req, res) => {
 			prompt,
 			assistantType // Burada assistantType kullanıyoruz
 		);
-		let fullResponse = '';
 
 		console.log(`OpenAI thread oluşturuluyor...`);
 		const thread = await openai.beta.threads.create();
@@ -216,7 +202,7 @@ app.post('/analiz/:apiAnahtari', async (req, res) => {
 		});
 		console.log(`Mesaj eklendi`);
 
-		console.log(`Thread çalıştırılıyor... Asistan ID: ${assistant.id}, Vektör Depo ID: ${vectorStore.id}`);
+		console.log(`Thread çalıştırılıyor... Asistan ID: ${assistant.id}`);
 		const run = await openai.beta.threads.runs.create(thread.id, {
 			assistant_id: assistant.id,
 			tools: [
@@ -234,9 +220,10 @@ app.post('/analiz/:apiAnahtari', async (req, res) => {
 			},
 			stream: true,
 		});
-		console.log(`Run başlatıldı: ${run.id}`);
+		console.log(`Run başlatıldı: ${run.id || 'ID bulunamadı'}`);
 
 		console.log(`Stream'den yanıt bekleniyor...`);
+		let fullResponse = '';
 		for await (const event of run) {
 			if (event.event === 'thread.message.delta') {
 				const content = event.data.delta.content;
@@ -254,10 +241,11 @@ app.post('/analiz/:apiAnahtari', async (req, res) => {
 		await saveAnalysis(id, fullResponse);
 		console.log(`Analiz kaydedildi`);
 
-		// İşlem bittikten sonra önbelleği temizle
-		console.log(`Config önbelleği temizleniyor...`);
-		await clearConfigCache();
-		console.log(`Önbellek temizlendi`);
+		// İşlem bittikten sonra önbelleği temizlemeyi artık yapmayalım
+		// Her istekte önbelleği temizlemek yerine, uzun periyotlarla ya da gerektiğinde temizlenebilir
+		// console.log(`Config önbelleği temizleniyor...`);
+		// await clearConfigCache();
+		// console.log(`Önbellek temizlendi`);
 
 		console.log(`İşlem başarıyla tamamlandı`);
 		res.end();
