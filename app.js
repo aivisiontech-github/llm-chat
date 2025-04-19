@@ -41,13 +41,13 @@ let assistant
 let vectorStore
 
 function generateUserMessage(config, language, sport, prompt, analyzeType) {
-	if (analyzeType === 'Carpal') {
-		return config.PROMPT_TEMPLATES.CARPAL
-			.replace('{language}', language)
-			.replace('{sport}', sport)
-			.replace('{prompt}', prompt);
+	// Asistan konfigürasyonunu array içinden bulalım
+	const assistantConfig = config.ASSISTANTS.find(asst => asst.type === analyzeType);
+	if (!assistantConfig) {
+		throw new Error(`${analyzeType} için asistan konfigürasyonu bulunamadı`);
 	}
-	return config.PROMPT_TEMPLATES.NORMAL
+	
+	return assistantConfig.prompt_template
 		.replace('{language}', language)
 		.replace('{sport}', sport)
 		.replace('{prompt}', prompt);

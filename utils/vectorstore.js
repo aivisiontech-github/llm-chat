@@ -10,18 +10,20 @@ const openai = require('./openai'); // openai.js dosyasından içe aktarın
 const config = require('./consts');
 
 async function getOrCreateVectorStore(analyzeType) {
-  const VECTOR_STORE_ID = analyzeType === 'Carpal' 
-    ? config.VECTOR_STORES.CARPAL 
-    : config.VECTOR_STORES.NORMAL;
+  // Asistan konfigürasyonunu array içinden bulalım
+  const assistantConfig = config.ASSISTANTS.find(asst => asst.type === analyzeType);
+  if (!assistantConfig) {
+    throw new Error(`${analyzeType} için asistan konfigürasyonu bulunamadı`);
+  }
 
   try {
-    const vectorStore = await openai.beta.vectorStores.retrieve(VECTOR_STORE_ID);
+    const vectorStore = await openai.beta.vectorStores.retrieve(assistantConfig.vector_store_id);
     console.log('Mevcut vektör deposu kullanılıyor:', vectorStore.id);
     return vectorStore;
   } catch (error) {
     console.error('Mevcut vektör deposu alınamadı, yeni bir vektör deposu oluşturuluyor...');
     const vectorStore = await openai.beta.vectorStores.create({
-      name: analyzeType === 'Carpal' ? 'El Sağlık Belgeleri' : 'Sağlık Belgeleri',
+      name: assistantConfig.name + ' Belgeleri',
     });
     console.log('Yeni vektör deposu oluşturuldu:', vectorStore.id);
     return vectorStore;

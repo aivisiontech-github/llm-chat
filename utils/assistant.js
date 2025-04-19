@@ -10,23 +10,21 @@ const openai = require('./openai') // openai.js dosyasından içe aktarın
 const config = require('./consts')
 
 async function getOrCreateAssistant(analyzeType) {
-	const ASSISTANT_ID =
-		analyzeType === 'Carpal' ? config.ASSISTANTS.CARPAL : config.ASSISTANTS.NORMAL
-	const INSTRUCTIONS = 
-		analyzeType === 'Carpal' ? config.INSTRUCTIONS.CARPAL : config.INSTRUCTIONS.NORMAL
+	// Asistan konfigürasyonunu array içinden bulalım
+	const assistantConfig = config.ASSISTANTS.find(asst => asst.type === analyzeType)
+	if (!assistantConfig) {
+		throw new Error(`${analyzeType} için asistan konfigürasyonu bulunamadı`)
+	}
 
 	try {
-		const assistant = await openai.beta.assistants.retrieve(ASSISTANT_ID)
+		const assistant = await openai.beta.assistants.retrieve(assistantConfig.assistant_id)
 		console.log('Mevcut asistan kullanılıyor:', assistant.id)
 		return assistant
 	} catch (error) {
 		console.error('Mevcut asistan alınamadı, yeni bir asistan oluşturuluyor...')
 		return await openai.beta.assistants.create({
-			name:
-				analyzeType === 'Carpal'
-					? 'El Sağlığı Analist Asistanı'
-					: 'Sağlık Analist Asistanı',
-			instructions: INSTRUCTIONS,
+			name: assistantConfig.name,
+			instructions: assistantConfig.instructions,
 			model: 'gpt-4o',
 			tools: [{ type: 'file_search' }],
 		})
