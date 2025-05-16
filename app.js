@@ -2,13 +2,11 @@ const express = require('express')
 const bodyParser = require('body-parser')
 const axios = require('axios')
 const dotenv = require('dotenv')
+const admin = require('firebase-admin')
 const cors = require('cors')
 
 // OpenAI API anahtarınızı burada da dahil edin
 const openai = require('./utils/openai') // openai.js dosyasından içe aktarın
-
-// MongoDB'den yapılandırma yükleme fonksiyonunu içe aktar
-const { loadConfigFromMongoDB, clearConfigCache } = require('./utils/configLoader')
 
 // Fonksiyonları içe aktar
 const {
@@ -23,186 +21,189 @@ const {
 	updateAssistantWithVectorStore,
 } = require('./utils/vectorstore')
 
-// MongoDB fonksiyonlarını içe aktar
-const {
-	connectToDatabase,
-	saveAnalysis,
-	getAnalysisById
-} = require('./utils/mongodb')
-
 const promptGenerator = require('./prompter')
 
 dotenv.config() // Bu satır en üstte olmalı, ardından process.env kullanabilirsiniz.
 
 const app = express()
 const PORT = process.env.PORT || 3000
+const FB_URL = process.env.FB_URL
+
+const API_KEY = 'test'
+
+// Firebase Admin SDK'yı başlatma
+const serviceAccount = require('./database.json')
+
+admin.initializeApp({
+	credential: admin.credential.cert(serviceAccount),
+	databaseURL: FB_URL,
+})
 
 let assistant
 let vectorStore
 
-function generateUserMessage(config, language, sport, prompt, analyzeType) {
-	console.log(`generateUserMessage - Analiz tipi: ${analyzeType}, Mevcut asistanlar: ${JSON.stringify(config.ASSISTANTS.map(a => a.type))}`);
-	
-	// Asistan konfigürasyonunu array içinden bulalım
-	const assistantConfig = config.ASSISTANTS.find(asst => asst.type === analyzeType);
-	if (!assistantConfig) {
-		console.warn(`${analyzeType} için asistan konfigürasyonu bulunamadı, varsayılan olarak NORMAL kullanılıyor.`);
-		// Varsayılan olarak NORMAL tipi kullan
-		const defaultConfig = config.ASSISTANTS.find(asst => asst.type === 'NORMAL');
-		if (!defaultConfig) {
-			throw new Error('Varsayılan asistan konfigürasyonu (NORMAL) bulunamadı!');
-		}
-		console.log(`Varsayılan asistan (NORMAL) kullanılıyor - ID: ${defaultConfig.assistant_id}`);
-		return defaultConfig.prompt_template
-			.replace('{language}', language)
-			.replace('{sport}', sport)
-			.replace('{prompt}', prompt);
+function generateUserMessage(language, sport, prompt, analyzeType) {
+	if (analyzeType === 'Carpal') {
+		return `Create a comprehensive Carpal Tunnel Risk Assessment and Exercise Program in ${language} based on thermal analysis and specifically for ${sport}.
+
+    STRUCTURE:
+    1. Title: Carpal Tunnel Risk Assessment and Exercise Program (Start with one hashtag # hierarchy)
+    
+    2. Risk Assessment Overview:
+       - Current risk level based on thermal analysis
+       - Key findings and primary concerns
+       
+    3. Exercise Program (4-6 Weeks):
+       ### Exercise Categories (with two hashtag ## hierarchy)
+       - Flexibility Exercises
+       - Strengthening Exercises
+       - Neural Mobilization
+       > Each exercise should include:
+         * Sets and repetitions
+         * Rest periods
+         * Targeted benefits
+         * Proper form instructions
+    
+    4. Implementation Guidelines:
+       - Daily routine recommendations
+       - Progress tracking methods
+       - Warning signs to monitor
+       - Sport-specific adaptations
+    
+    KEY REQUIREMENTS:
+    - Provide clean markdown without code blocks
+    - Keep medical terms minimal and explained
+    - Focus on sport-specific hand movements
+    - Clear progression guidelines
+    - Do not make headings in other languages than ${language}
+    - Maintain professional but accessible language
+    
+    IMPORTANT:
+    - Focus on preventive care and maintenance
+    - Include proper form emphasis
+    - Adapt to athlete's current condition
+    - Consider dominant hand factors
+    
+    Data for analysis: ${prompt}`
 	}
-	
-	console.log(`Asistan bulundu - Tip: ${assistantConfig.type}, ID: ${assistantConfig.assistant_id}`);
-	return assistantConfig.prompt_template
-		.replace('{language}', language)
-		.replace('{sport}', sport)
-		.replace('{prompt}', prompt);
+	return `Create a focused exercise risk assessment in ${language} and spesificly this sport: ${sport}.
+
+    STRUCTURE:
+    1. Title: Exercise Assessment (Start with one hashtag # hierarchy)
+    
+    2. Overview section:
+       - One paragraph summarizing all identified risks and key recommendations
+       
+    3. Main section for each affected muscle:
+       ### [Muscle Name] ([High Risk Exercise]) (with two hashtag ## hierarchy)
+       - Detailed explanation (2-3 sentences):
+         • Specific injury risks and mechanisms
+         • Potential complications
+         • Direct connection to current condition
+       - One precise alternative exercise with implementation details
+       > Critical warning signs to monitor
+    
+    4. Training Modifications section by exercise type
+    
+    KEY REQUIREMENTS:
+    - Provide clean markdown output without code blocks
+    - Keep technical terminology minimal
+    - Ensure overview accurately summarizes all detailed sections
+    - Focus on practical, forward-looking recommendations
+    - Give clear reasoning for each exercise restriction
+    - Do not make the headings in other languages other than ${language}
+    - Provide one specific, detailed alternative per muscle
+    - Include only affected muscles from data
+    
+    IMPORTANT:
+    - Do not mention analysis methods or data sources in the output
+    - Keep focus on recommendations and risks, not diagnostics
+    - Avoid technical jargon when possible
+    - Make sure overview connects with detailed sections
+    - Start the report with one hashtag # hierarchy
+    
+    Data for analysis: ${prompt}`
 }
 
 ;(async () => {
 	try {
-		// İlk başlangıçta MongoDB bağlantısını test et
-		await connectToDatabase();
-		console.log('MongoDB bağlantısı başarılı');
-		
-		// Config bağlantısını test et
-		const initialConfig = await loadConfigFromMongoDB();
-		console.log('MongoDB\'den yapılandırma yüklenmesi test edildi');
-		
+		// Asistanı al veya oluştur
 		// Sunucuyu başlat
 		app.listen(PORT, () => {
 			console.log(`Server is running on port ${PORT}`)
 		})
 	} catch (error) {
-		console.error('Error initializing connection:', error)
+		console.error('Error initializing assistant or vector store:', error)
 	}
 })()
 
-app.use(bodyParser.json())
+const db = admin.database()
+
+app.use(bodyParser.json({ limit: '50mb' }))
+app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }))
 app.use(cors())
 
-app.post('/analiz/:apiAnahtari', async (req, res) => {
+function apiKeyMiddleware(req, res, next) {
+	const apiKey = req.params.apiAnahtari
+	if (apiKey !== API_KEY) {
+		return res.status(403).json({ message: 'Geçersiz API anahtarı' })
+	}
+	next()
+}
+
+app.post('/analiz/:apiAnahtari', apiKeyMiddleware, async (req, res) => {
+	const { language, data, sport } = req.body
+
+	if (!language || !data) {
+		return res
+			.status(400)
+			.json({ message: 'Geçersiz istek. Dil ve veri gereklidir.' })
+	}
+
+	const { prompt, id, analyzeType } = promptGenerator(data.value)
+
+	vectorStore = await getOrCreateVectorStore(analyzeType)
+	assistant = await getOrCreateAssistant(analyzeType)
+	await updateAssistantWithVectorStore(assistant, vectorStore)
+
+	const ref = db.ref('analyses')
+	const analysisRef = ref.child(id)
+
 	try {
-		// Her sorgu için MongoDB'den yapılandırmayı yeniden yükle
-		console.log('MongoDB\'den yapılandırma yükleniyor...');
-		// MongoDB'den yapılandırmayı her istekte yeniden yüklemek yerine, cache kullanarak yükleyelim
-		// İlk seferde false ile çağırıp güncel veriyi alalım, sonraki isteklerde önbellekteki veriyi kullanabiliriz
-		const config = await loadConfigFromMongoDB(true); // Önbelleği kullan
-		console.log(`Yapılandırma yüklendi. Mevcut asistan tipleri: ${JSON.stringify(config.ASSISTANTS.map(a => a.type))}`);
-		
-		// API anahtarını doğrula
-		const apiKey = req.params.apiAnahtari;
-		if (apiKey !== config.API_KEY) {
-			console.error(`Geçersiz API anahtarı: ${apiKey}`);
-			return res.status(403).json({ message: 'Geçersiz API anahtarı' });
-		}
-		console.log('API anahtarı doğrulandı');
-
-		const { language, data, sport } = req.body;
-		console.log(`İstek: Dil=${language}, Spor=${sport}`);
-		// Çok uzun log çıktısını kısaltalım
-		console.log(`Data tipi ve ID: ${data.value?.analyzeType}, ${data.value?.id}`);
-
-		if (!language || !data) {
-			console.error('Eksik veri: Dil veya veri eksik');
-			return res
-				.status(400)
-				.json({ message: 'Geçersiz istek. Dil ve veri gereklidir.' });
-		}
-
-		console.log('promptGenerator fonksiyonu çağrılıyor...');
-		const { prompt, id, analyzeType } = promptGenerator(data.value);
-		console.log(`Verilerden analiz tipi belirlendi: ${analyzeType} (orjinal)`);
-		
-		// analyzeType değerini büyük harfe çevirerek asistan yapısındaki type ile eşleştir
-		const assistantType = analyzeType.toUpperCase();
-		console.log(`Asistan tipi (büyük harfle): ${assistantType}`);
-		
-		// MongoDB'den mevcut analizi kontrol et
-		console.log(`MongoDB'den ID=${id} için mevcut analiz kontrol ediliyor...`);
-		const existingAnalysis = await getAnalysisById(id);
-		
-		// Önce mevcut analiz kontrolü yapalım, böylece eğer varsa gereksiz asistan yükleme gibi işlemler yapmayalım
-		if (existingAnalysis) {
-			console.log(`Mevcut analiz bulundu, doğrudan dönülüyor: ID=${id}`);
+		const snapshot = await analysisRef.once('value')
+		if (snapshot.exists()) {
 			res.writeHead(200, {
 				'Content-Type': 'text/event-stream',
 				'Cache-Control': 'no-cache',
 				Connection: 'keep-alive',
-			});
-			res.write(`data: ${JSON.stringify({ content: existingAnalysis.analysis })}\n\n`);
-			return res.end();
-		}
-		console.log(`Mevcut analiz bulunamadı, yeni analiz yapılacak`);
-		
-		// Asistanın yapılandırmada mevcut olup olmadığını kontrol et
-		const assistantConfig = config.ASSISTANTS.find(asst => asst.type === assistantType);
-		if (!assistantConfig) {
-			console.warn(`${assistantType} için yapılandırmada bir asistan bulunamadı. NORMAL tip kullanılacak.`);
-		} else {
-			console.log(`Asistan konfigürasyonu bulundu: Tip=${assistantConfig.type}, ID=${assistantConfig.assistant_id}, VectorStore=${assistantConfig.vector_store_id}`);
-		}
-		
-		// Asistan ve vektör deposunu yükle
-		try {
-			console.log(`${assistantType} için asistan ve vektör deposu alınıyor...`);
-			
-			vectorStore = await getOrCreateVectorStore(assistantType);
-			console.log(`Vektör deposu alındı: ${vectorStore.id}`);
-			
-			assistant = await getOrCreateAssistant(assistantType);
-			console.log(`Asistan alındı: ${assistant.id}`);
-			
-			await updateAssistantWithVectorStore(assistant, vectorStore);
-			console.log(`Asistan vektör deposu ile güncellendi`);
-		} catch (error) {
-			console.warn(`${assistantType} için asistan bulunamadı, varsayılan olarak NORMAL kullanılıyor:`, error.message);
-			
-			console.log(`NORMAL tipi için asistan ve vektör deposu alınıyor...`);
-			vectorStore = await getOrCreateVectorStore('NORMAL');
-			console.log(`NORMAL vektör deposu alındı: ${vectorStore.id}`);
-			
-			assistant = await getOrCreateAssistant('NORMAL');
-			console.log(`NORMAL asistan alındı: ${assistant.id}`);
-			
-			await updateAssistantWithVectorStore(assistant, vectorStore);
-			console.log(`NORMAL asistan vektör deposu ile güncellendi`);
+			})
+			const existingAnalysis = snapshot.val().analysis
+			res.write(`data: ${JSON.stringify({ content: existingAnalysis })}\n\n`)
+			return res.end()
 		}
 
 		res.writeHead(200, {
 			'Content-Type': 'text/event-stream',
 			'Cache-Control': 'no-cache',
 			Connection: 'keep-alive',
-		});
+		})
 
-		console.log(`Kullanıcı mesajı oluşturuluyor...`);
 		const userMessage = generateUserMessage(
-			config,
 			language,
 			sport,
 			prompt,
-			assistantType // Burada assistantType kullanıyoruz
-		);
+			analyzeType
+		)
+		let fullResponse = ''
 
-		console.log(`OpenAI thread oluşturuluyor...`);
-		const thread = await openai.beta.threads.create();
-		console.log(`Thread oluşturuldu: ${thread.id}`);
+		console.log('UserMessage: ', userMessage)
 
-		console.log(`Thread'e mesaj ekleniyor...`);
+		const thread = await openai.beta.threads.create()
 		await openai.beta.threads.messages.create(thread.id, {
 			role: 'user',
 			content: userMessage,
-		});
-		console.log(`Mesaj eklendi`);
+		})
 
-		console.log(`Thread çalıştırılıyor... Asistan ID: ${assistant.id}`);
 		const run = await openai.beta.threads.runs.create(thread.id, {
 			assistant_id: assistant.id,
 			tools: [
@@ -219,40 +220,33 @@ app.post('/analiz/:apiAnahtari', async (req, res) => {
 				},
 			},
 			stream: true,
-		});
-		console.log(`Run başlatıldı: ${run.id || 'ID bulunamadı'}`);
+		})
 
-		console.log(`Stream'den yanıt bekleniyor...`);
-		let fullResponse = '';
 		for await (const event of run) {
 			if (event.event === 'thread.message.delta') {
-				const content = event.data.delta.content;
+				const content = event.data.delta.content
 				if (content && content.length > 0 && content[0].type === 'text') {
-					const textValue = content[0].text.value;
-					fullResponse += textValue;
-					res.write(`data: ${JSON.stringify({ content: textValue })}\n\n`);
+					const textValue = content[0].text.value
+					fullResponse += textValue
+					res.write(`data: ${JSON.stringify({ content: textValue })}\n\n`)
 				}
 			}
 		}
-		console.log(`Stream tamamlandı, yanıt alındı (${fullResponse.length} karakter)`);
 
-		// MongoDB'ye analiz sonucunu kaydet
-		console.log(`Analiz sonucu MongoDB'ye kaydediliyor: ID=${id}`);
-		await saveAnalysis(id, fullResponse);
-		console.log(`Analiz kaydedildi`);
+		await analysisRef.set({
+			analysis: fullResponse,
+			timestamp: admin.database.ServerValue.TIMESTAMP,
+		})
 
-		// İşlem bittikten sonra önbelleği temizlemeyi artık yapmayalım
-		// Her istekte önbelleği temizlemek yerine, uzun periyotlarla ya da gerektiğinde temizlenebilir
-		// console.log(`Config önbelleği temizleniyor...`);
-		// await clearConfigCache();
-		// console.log(`Önbellek temizlendi`);
-
-		console.log(`İşlem başarıyla tamamlandı`);
-		res.end();
+		res.end()
 	} catch (error) {
-		console.error('Hata oluştu:', error);
-		console.error('Hata yığını:', error.stack);
-		res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`);
-		res.end();
+		console.error('Error:', error)
+		res.write(`data: ${JSON.stringify({ error: error.message })}\n\n`)
+		res.end()
 	}
-});
+})
+
+// Tekrar app.listen çağrısına gerek yok, yukarıda zaten var
+// app.listen(PORT, () => {
+//   console.log(`Server is running on port ${PORT}`);
+// });

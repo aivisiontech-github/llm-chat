@@ -1,131 +1,148 @@
-const config = require('./utils/consts');
+function getMusclesForAnalysisType(analyzeType, analyzeSideType) {
+	const frontLowerMuscles = [
+		'TopAdductor',
+		'QuadricepsRectus',
+		'QuadricepsVastus',
+		'VastusMedialis',
+		'Patellar',
+		'Gastrocnemius',
+		'TibialisAnterior',
+		'FootAnkle',
+		'Foot',
+	]
+	const backLowerMuscles = [
+		'TopAdductor',
+		'BicepsFemoris',
+		'VastusLateralis',
+		'HamstringMedial',
+		'Popliteal',
+		'CalfMedialis',
+		'CalfLateralis',
+		'Achilles',
+		'Calceneal',
+	]
+	const frontUpperMuscles = [
+		'Hand',
+		'Carpel',
+		'Flexor',
+		'Extansor',
+		'Olecranon',
+		'Biceps',
+		'Deltoid',
+		'Cervical',
+		'Collarbone',
+		'Pectoral',
+		'Abdominal',
+		'Hipokondriak',
+	]
+	const backUpperMuscles = [
+		'Hand',
+		'Carpel',
+		'Flexor',
+		'Extansor',
+		'Olecranon',
+		'Deltoid',
+		'Triceps',
+		'Trapeze',
+		'RotatorCuff',
+		'Gluteal',
+		'Lumbar',
+	]
+	const carpalMuscles = [
+		'Thenar',
+		'Hypothenar',
+		'Palmaris',
+		'Ring',
+		'Index',
+		'Middle',
+		'Tumb',
+		'Pinky',
+		'HandCarpal',
+	]
 
-console.log("prompter.js modülü yükleniyor...");
-
-const getMusclesForAnalysisType = (analyzeType, analyzeSideType) => {
-    console.log(`getMusclesForAnalysisType - analyzeType: ${analyzeType}, analyzeSideType: ${analyzeSideType}`);
-    
-    // analyzeType'ı büyük harfe çevir, config ile eşleşmesi için
-    const assistantType = analyzeType.toUpperCase();
-    
-    // Config'den asistan konfigürasyonunu bul
-    const assistantConfig = config.ASSISTANTS.find(asst => asst.type === assistantType);
-    
-    if (!assistantConfig) {
-        console.warn(`${assistantType} için asistan konfigürasyonu bulunamadı, boş array dönülüyor.`);
-        return [];
-    }
-    
-    // NORMAL asistanında, Lower ve Upper gibi ayrıca bir seviye var
-    if (assistantType === 'NORMAL') {
-        // analyzeType veri tarafından geldiği için (Lower/Upper) olduğu gibi kullan
-        const originalType = analyzeType; // Lower veya Upper
-        
-        if (!assistantConfig.muscles[originalType]) {
-            console.warn(`NORMAL asistanında ${originalType} tipi için kas bilgisi bulunamadı.`);
-            return [];
-        }
-        
-        if (!assistantConfig.muscles[originalType][analyzeSideType]) {
-            console.warn(`NORMAL asistanında ${originalType} tipinin ${analyzeSideType} yönü için kas bilgisi bulunamadı.`);
-            return [];
-        }
-        
-        const muscles = assistantConfig.muscles[originalType][analyzeSideType] || [];
-        console.log(`${originalType} ${analyzeSideType} için ${muscles.length} kas bulundu`);
-        return muscles;
-    }
-    
-    // TEST asistanı için özel kontrol
-    if (assistantType === 'TEST') {
-        // TEST asistanı için test kısmı kullanılıyor
-        if (!assistantConfig.muscles["test"]) {
-            console.warn(`TEST asistanında test tipi için kas bilgisi bulunamadı.`);
-            return [];
-        }
-        
-        const muscles = assistantConfig.muscles["test"] || [];
-        console.log(`TEST için ${muscles.length} kas bulundu`);
-        return muscles; 
-    }
-    
-    // Diğer asistanlarda direkt Front/Back yapısı var
-    if (!assistantConfig.muscles[analyzeSideType]) {
-        console.warn(`${assistantType} asistanında ${analyzeSideType} yönü için kas bilgisi bulunamadı.`);
-        return [];
-    }
-    
-    const muscles = assistantConfig.muscles[analyzeSideType] || [];
-    console.log(`${assistantType} ${analyzeSideType} için ${muscles.length} kas bulundu`);
-    return muscles;
+	switch (analyzeType) {
+		case 'Lower':
+			return analyzeSideType === 'Front' ? frontLowerMuscles : backLowerMuscles
+		case 'Upper':
+			return analyzeSideType === 'Front' ? frontUpperMuscles : backUpperMuscles
+		case 'FullBody':
+			return analyzeSideType === 'Front'
+				? [...frontLowerMuscles, ...frontUpperMuscles]
+				: [...backLowerMuscles, ...backUpperMuscles]
+		case 'Carpal':
+			return carpalMuscles
+		default:
+			return []
+	}
 }
 
 function thermalAnalyze(data) {
-    let anamolies = [];
-    for (let i = 0; i < data.length; i++) {
-        let muscle = data[i];
-        if ((muscle.tiredness !== null && muscle.tiredness !== "Normal") || 
-            (muscle.disability !== null && muscle.disability !== "Normal")) {
-            let anomaly = { muscleType: muscle.muscleType };
-            if (muscle.tiredness !== null && muscle.tiredness !== "Normal") {
-                anomaly.tiredness = muscle.tiredness;
-            }
-            if (muscle.disability !== null && muscle.disability !== "Normal") {
-                anomaly.disability = muscle.disability;
-            }
-            anamolies.push(anomaly);
-        }
-    }
-    console.log(`${anamolies.length} anomali tespit edildi`);
-    return { anamolies };
+	let anamolies = []
+	for (let i = 0; i < data.length; i++) {
+		let muscle = data[i]
+		if (
+			(muscle.tiredness !== null && muscle.tiredness !== 'Normal') ||
+			(muscle.disability !== null && muscle.disability !== 'Normal')
+		) {
+			let anomaly = { muscleType: muscle.muscleType }
+			if (muscle.tiredness !== null && muscle.tiredness !== 'Normal') {
+				anomaly.tiredness = muscle.tiredness
+			}
+			if (muscle.disability !== null && muscle.disability !== 'Normal') {
+				anomaly.disability = muscle.disability
+			}
+			anamolies.push(anomaly)
+		}
+	}
+	return { anamolies }
 }
 
-function generatePrompt(athlete, analyzeType, analyzeSideType, anamolies, relevantMuscles) {
-    console.log(`generatePrompt - analyzeType: ${analyzeType}, relevantMuscles: ${relevantMuscles.length}`);
+function generateCarpalPrompt(
+	athlete,
+	analyzeType,
+	analyzeSideType,
+	anamolies,
+	relevantMuscles
+) {
+	const formatDate = dateString => {
+		const options = { year: 'numeric', month: 'long', day: 'numeric' }
+		return new Date(dateString).toLocaleDateString('tr-TR', options)
+	}
+
+	const generateAnomalyReport = anamolies => {
+		if (anamolies.length === 0) return 'Herhangi bir anomali tespit edilmedi.'
+
+		const filteredAnomalies = anamolies.filter(anomaly =>
+			relevantMuscles.includes(anomaly.muscleType)
+		)
+
+		return filteredAnomalies
+			.map(anomaly => {
+				let details = `Kas Bölgesi: ${anomaly.muscleType}`
+				if (anomaly.tiredness && anomaly.disability) {
+					details += `, Yorgunluk: ${anomaly.tiredness}, Sakatlık: ${anomaly.disability}`
+				} else if (anomaly.tiredness) {
+					details += `, Yorgunluk: ${anomaly.tiredness}`
+				} else if (anomaly.disability) {
+					details += `, Sakatlık: ${anomaly.disability}`
+				}
+				return details
+			})
+			.join('; ')
+	}
+
+	return `El ${analyzeSideType} termal görüntüsü değerlendirilmiştir.
     
-    const formatDate = (dateString) => {
-        const options = { year: 'numeric', month: 'long', day: 'numeric' };
-        return new Date(dateString).toLocaleDateString('tr-TR', options);
-    };
-
-    const generateAnomalyReport = (anamolies) => {
-        if (anamolies.length === 0) return "Herhangi bir anomali tespit edilmedi.";
-
-        const filteredAnomalies = anamolies.filter(anomaly =>
-            relevantMuscles.includes(anomaly.muscleType)
-        );
-
-        return filteredAnomalies.map(anomaly => {
-            let details = `Kas Bölgesi: ${anomaly.muscleType}`;
-            if (anomaly.tiredness && anomaly.disability) {
-                details += `, Yorgunluk: ${anomaly.tiredness}, Sakatlık: ${anomaly.disability}`;
-            } else if (anomaly.tiredness) {
-                details += `, Yorgunluk: ${anomaly.tiredness}`;
-            } else if (anomaly.disability) {
-                details += `, Sakatlık: ${anomaly.disability}`;
-            }
-            return details;
-        }).join('; ');
-    };
-
-    let title = '';
-    if (analyzeType === 'Carpal') {
-        title = `El ${analyzeSideType} termal görüntüsü değerlendirilmiştir.`;
-    } else if (analyzeType === 'test') {
-        title = `Test ${analyzeSideType} termal görüntüsü değerlendirilmiştir.`;
-    } else {
-        title = `Sporcunun alınan ${analyzeType} ${analyzeSideType} termal görüntüsü değerlendirilmiştir.`;
-    }
-
-    const athleteInfo = `Sporcu Bilgileri: ${athlete.positions.join(', ')} pozisyonunda oynayan sporcu ${formatDate(athlete.birthDate)} doğumlu ve ${athlete.gender}. Sporcunun dominant tarafı ${athlete.dominantSide}. Boy: ${athlete.bodySize.height} cm, Kilo: ${athlete.bodySize.weight} kg.`;
+    Sporcu Bilgileri: ${athlete.positions.join(
+			', '
+		)} pozisyonunda oynayan sporcu ${formatDate(
+		athlete.birthDate
+	)} doğumlu ve ${athlete.gender}. Sporcunun dominant tarafı ${
+		athlete.dominantSide
+	}. Boy: ${athlete.bodySize.height} cm, Kilo: ${athlete.bodySize.weight} kg.
     
-    const analysisResult = `Analiz Sonucu: ${generateAnomalyReport(anamolies)}`;
-
-    const note = `Not: Bu değerlendirme AI4Sports yapay zeka ve termografi ile sporcu sakatlık ve yorgunluk risk analizi sonucudur. Sakatlık riski seviyeleri (düşükten yükseğe): Normal, Should Observe, Should Protect, Attention, Urgent. Yorgunluk riski seviyeleri (düşükten yükseğe): Normal, Low, Average, High.`;
-
-    let additionalInfo = '';
-    if (analyzeType === 'Carpal') {
-        additionalInfo = `
+    Analiz Sonucu: ${generateAnomalyReport(anamolies)}
+    
     Sen bir ortopedistsin. Yukarıdaki sporcunun analiz sonuçlarına göre:
     
     1. Önce sporcunun karpal tünel risk durumunu değerlendir ve bunu açıkla
@@ -136,35 +153,88 @@ function generatePrompt(athlete, analyzeType, analyzeSideType, anamolies, releva
     3. İlerleme takibi için önerilerde bulun
     4. Üzerine düşünerek özgün egzersizler ver tekrara düşme
     
-    Lütfen tüm bu bilgileri profesyonel bir dille ve organize şekilde sun.`;
-    }
-
-    const promptResult = `${title}
+    Lütfen tüm bu bilgileri profesyonel bir dille ve organize şekilde sun.
     
-${athleteInfo}
+    Not: Bu değerlendirme AI4Sports yapay zeka ve termografi ile sporcu sakatlık ve yorgunluk risk analizi sonucudur. Sakatlık riski seviyeleri (düşükten yükseğe): Normal, Should Observe, Should Protect, Attention, Urgent. Yorgunluk riski seviyeleri (düşükten yükseğe): Normal, Low, Average, High.`
+}
 
-${analysisResult}
-${additionalInfo}
+function generateStandardPrompt(
+	athlete,
+	analyzeType,
+	analyzeSideType,
+	anamolies,
+	relevantMuscles
+) {
+	const formatDate = dateString => {
+		const options = { year: 'numeric', month: 'long', day: 'numeric' }
+		return new Date(dateString).toLocaleDateString('tr-TR', options)
+	}
 
-${note}`;
+	const generateAnomalyReport = anamolies => {
+		if (anamolies.length === 0) return 'Herhangi bir anomali tespit edilmedi.'
 
-    return promptResult;
+		const filteredAnomalies = anamolies.filter(anomaly =>
+			relevantMuscles.includes(anomaly.muscleType)
+		)
+
+		return filteredAnomalies
+			.map(anomaly => {
+				let details = `Kas Bölgesi: ${anomaly.muscleType}`
+				if (anomaly.tiredness && anomaly.disability) {
+					details += `, Yorgunluk: ${anomaly.tiredness}, Sakatlık: ${anomaly.disability}`
+				} else if (anomaly.tiredness) {
+					details += `, Yorgunluk: ${anomaly.tiredness}`
+				} else if (anomaly.disability) {
+					details += `, Sakatlık: ${anomaly.disability}`
+				}
+				return details
+			})
+			.join('; ')
+	}
+
+	return `Sporcunun alınan ${analyzeType} ${analyzeSideType} termal görüntüsü değerlendirilmiştir.
+    
+Sporcu Bilgileri: ${athlete.positions.join(
+		', '
+	)} pozisyonunda oynayan sporcu ${formatDate(athlete.birthDate)} doğumlu ve ${
+		athlete.gender
+	}. Sporcunun dominant tarafı ${athlete.dominantSide}. Boy: ${
+		athlete.bodySize.height
+	} cm, Kilo: ${athlete.bodySize.weight} kg.
+
+Analiz Sonucu: ${generateAnomalyReport(anamolies)}
+
+Not: Bu değerlendirme AI4Sports yapay zeka ve termografi ile sporcu sakatlık ve yorgunluk risk analizi sonucudur. Sakatlık riski seviyeleri (düşükten yükseğe): Normal, Should Observe, Should Protect, Attention, Urgent. Yorgunluk riski seviyeleri (düşükten yükseğe): Tired, Exhausted, Attention, Urgent`
 }
 
 module.exports = function promptGenerator(data) {
-    console.log(`promptGenerator çağrıldı - ID: ${data.id}, Tip: ${data.analyzeType}`);
-    
-    const { id, analyzeType, analyzeSideType, athlete, thermalAnalyzeData } = data;
-    const { anamolies } = thermalAnalyze(thermalAnalyzeData);
-    const relevantMuscles = getMusclesForAnalysisType(analyzeType, analyzeSideType);
+	const { id, analyzeType, analyzeSideType, athlete, thermalAnalyzeData } = data
+	const { anamolies } = thermalAnalyze(thermalAnalyzeData)
+	const relevantMuscles = getMusclesForAnalysisType(
+		analyzeType,
+		analyzeSideType
+	)
 
-    const prompt = generatePrompt(athlete, analyzeType, analyzeSideType, anamolies, relevantMuscles);
+	const prompt =
+		analyzeType === 'Carpal'
+			? generateCarpalPrompt(
+					athlete,
+					analyzeType,
+					analyzeSideType,
+					anamolies,
+					relevantMuscles
+			  )
+			: generateStandardPrompt(
+					athlete,
+					analyzeType,
+					analyzeSideType,
+					anamolies,
+					relevantMuscles
+			  )
 
-    return { 
-        prompt, 
-        id,
-        analyzeType 
-    };
-};
-
-console.log("prompter.js modülü yüklendi.");
+	return {
+		prompt,
+		id,
+		analyzeType,
+	}
+}
